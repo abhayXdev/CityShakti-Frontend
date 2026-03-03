@@ -37,6 +37,12 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
         setSuccessMsg("")
         setIsLoading(true)
 
+        if (role === "admin" && !department) {
+            setError("Please select your assigned department.")
+            setIsLoading(false)
+            return
+        }
+
         try {
             await registerApi({
                 full_name: fullName,
