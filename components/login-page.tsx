@@ -27,11 +27,13 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
 
     await new Promise((r) => setTimeout(r, 800))
 
-    const success = await login(role, username, password)
-    if (!success) {
-      setError("Invalid credentials. Please try again.")
+    try {
+      await login(role, username, password)
+    } catch (err: any) {
+      setError(err?.message || "Invalid credentials. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (

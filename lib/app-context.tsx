@@ -119,17 +119,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [complaints, wardComplaints, user?.role]);
 
   const login = useCallback(
-    async (role: string, username: string, password: string) => {
+    async (role: string, username: string, password: string): Promise<boolean> => {
       try {
         const data = await loginApi(username, password, role as "citizen" | "admin")
         const token = data.access_token
 
         // Fetch real user profile to get role, name, id
-        let profile: { role: string; full_name: string; id: number } | null = null
+        let profile: { role: string; full_name: string; id: number; ward?: string; department?: string } | null = null
         try {
           profile = await getMeApi(token)
         } catch {
           // fallback if /me fails
+        }
+
+        // Frontend guard: if actual role doesn't match selected tab, reject immediately
+        if (profile && profile.role !== role) {
+          const correct = profile.role === "admin" ? "Department Admin" : "Citizen"
+          throw new Error(`This account is registered as '${profile.role}'. Please select the '${correct}' tab to sign in.`)
         }
 
         // Store token for session persistence
@@ -151,9 +157,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // If the user is a citizen, fetch the community ward complaints
         if ((profile?.role || role) === "citizen") {
           try {
-            // In the current backend, the `auth/me` profile may not return the exact ward string, 
-            // but we can try to guess it from their complaints or default to a common one if needed.
-            // For a robust system, the user profile SHOULD have .ward on it.
             const userWard = (profile as any)?.ward || (liveComplaints.length > 0 ? liveComplaints[0].location.area : "Ward 4")
             const wComplaints = await getWardComplaintsApi(token, userWard)
             setWardComplaints(wComplaints)
@@ -163,9 +166,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         return true
-      } catch (err) {
+      } catch (err: any) {
         console.error("Login failed", err)
-        return false
+        // Re-throw with the specific error message so the UI can display it
+        throw new Error(err?.message || "Login failed. Please try again.")
       }
     },
     []
