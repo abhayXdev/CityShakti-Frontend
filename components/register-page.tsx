@@ -58,13 +58,13 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             return
         }
 
-        if (role === "admin" && !pincode) {
-            setError("PIN Code is required for Department Admins.")
+        if (!pincode) {
+            setError("PIN Code is required.")
             setIsLoading(false)
             return
         }
 
-        if (pincode && pincodeStatus !== "valid") {
+        if (pincodeStatus !== "valid") {
             setError("Please enter a valid 6-digit PIN code.")
             setIsLoading(false)
             return
@@ -216,7 +216,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="pincode" className="text-sm font-medium text-foreground">
-                                PIN Code {role === "admin" ? <span className="text-destructive">*</span> : <span className="text-muted-foreground font-normal">(Optional)</span>}
+                                PIN Code <span className="text-destructive">*</span>
                             </Label>
                             <div className="relative">
                                 <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

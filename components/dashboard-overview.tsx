@@ -55,6 +55,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { cn } from "@/lib/utils"
+import { MapPin } from "lucide-react"
 
 function AnimatedCounter({ target, duration = 1200 }: { target: number; duration?: number }) {
   const [count, setCount] = useState(0)
@@ -104,7 +105,6 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
   const [formData, setFormData] = useState({
     title: "",
     category: "",
-    ward: "",
     description: "",
     latitude: "" as string | number,
     longitude: "" as string | number,
@@ -155,6 +155,12 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
     e.preventDefault()
     setIsSubmitting(true)
     try {
+      if (!user?.ward) {
+        alert("Your profile is missing a strict PIN Code region. Please update your profile.")
+        setIsSubmitting(false)
+        return
+      }
+
       let finalPhotoUrl = formData.photo_url
 
       // Handle actual image file upload to ImgBB if a file was selected
@@ -180,7 +186,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       const payload: any = {
         title: formData.title,
         category: formData.category,
-        ward: formData.ward,
+        ward: user.ward,
         description: formData.description,
       }
       if (formData.latitude !== "") payload.latitude = Number(formData.latitude)
@@ -189,7 +195,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
 
       await createComplaint(payload)
       setIsDialogOpen(false)
-      setFormData({ title: "", category: "", ward: "", description: "", latitude: "", longitude: "", photo_url: "" })
+      setFormData({ title: "", category: "", description: "", latitude: "", longitude: "", photo_url: "" })
       setSelectedFile(null)
     } catch (error) {
       console.error("Failed to submit complaint:", error)
@@ -375,15 +381,13 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="ward">Ward / Locality</Label>
-                            <Input
-                              id="ward"
-                              placeholder="e.g., Ward No. 42 or Sector 15"
-                              required
-                              value={formData.ward}
-                              onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
-                            />
+                          <div className="grid gap-2 border border-primary/10 bg-primary/5 rounded-md p-3">
+                            <Label className="text-sm font-semibold flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-primary" /> Region Locked
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              This complaint will automatically be filed in your registered PIN code region <strong>({user?.ward})</strong>.
+                            </p>
                           </div>
                         </div>
                         <div className="grid gap-2">
@@ -415,39 +419,27 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                             </p>
                           )}
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="latitude">Latitude (Optional)</Label>
-                            <Input
-                              id="latitude"
-                              type="number"
-                              step="any"
-                              placeholder="e.g., 28.6139"
-                              value={formData.latitude}
-                              onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                            />
+                        <div className="grid gap-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Precise Location (Optional)</Label>
                           </div>
-                          <div className="grid gap-2">
-                            <div className="flex items-center justify-between">
-                              <Label htmlFor="longitude">Longitude (Optional)</Label>
-                              <Button
-                                type="button"
-                                variant="link"
-                                className="h-auto p-0 text-[10px] h-4"
-                                onClick={handleGetLocation}
-                              >
-                                Get Current Location
-                              </Button>
-                            </div>
-                            <Input
-                              id="longitude"
-                              type="number"
-                              step="any"
-                              placeholder="e.g., 77.2090"
-                              value={formData.longitude}
-                              onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                            />
+                          <div className="flex items-center gap-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full h-11 flex gap-2 items-center justify-center bg-background shadow-sm"
+                              onClick={handleGetLocation}
+                            >
+                              <MapPin className="h-4 w-4 text-primary" />
+                              {formData.latitude && formData.longitude ? "Update Location" : "Get Current Location"}
+                            </Button>
                           </div>
+                          {formData.latitude && formData.longitude && (
+                            <p className="text-xs text-success bg-success/10 px-3 py-1.5 rounded-md mt-1 border border-success/20 flex items-center justify-between">
+                              <span>Location Captured Successfully</span>
+                              <span className="font-mono text-[10px] opacity-70">{formData.latitude}, {formData.longitude}</span>
+                            </p>
+                          )}
                         </div>
                       </div>
                       <DialogFooter>
