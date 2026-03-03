@@ -15,7 +15,7 @@ interface RegisterPageProps {
 }
 
 export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
-    const [role, setRole] = useState<"citizen" | "admin">("citizen")
+    const [role, setRole] = useState<"citizen" | "officer">("citizen")
     const [fullName, setFullName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -52,7 +52,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
         setSuccessMsg("")
         setIsLoading(true)
 
-        if (role === "admin" && !department) {
+        if (role === "officer" && !department) {
             setError("Please select your assigned department.")
             setIsLoading(false)
             return
@@ -76,7 +76,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 email,
                 password,
                 ward: pincode || undefined,
-                department: role === "admin" ? department || undefined : undefined,
+                department: role === "officer" ? department || undefined : undefined,
                 role: role
             })
 
@@ -144,16 +144,16 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                         </button>
                         <button
                             type="button"
-                            onClick={() => { setRole("admin"); setError("") }}
+                            onClick={() => setRole("officer")}
                             className={cn(
-                                "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                                role === "admin"
+                                "flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                                role === "officer"
                                     ? "bg-primary text-primary-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             <Building2 className="h-4 w-4" />
-                            Department Admin
+                            Officer
                         </button>
                     </div>
 
@@ -256,7 +256,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             )}
                         </div>
 
-                        {role === "admin" && (
+                        {role === "officer" && (
                             <div className="flex flex-col gap-2">
                                 <Label htmlFor="department" className="text-sm font-medium text-foreground">
                                     Assigned Department <span className="text-destructive">*</span>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useApp } from "@/lib/app-context"
-import { Shield, User, Lock, ArrowRight, AlertCircle } from "lucide-react"
+import { Shield, User, Lock, ArrowRight, AlertCircle, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,7 +14,7 @@ interface LoginPageProps {
 
 export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   const { login } = useApp()
-  const [role, setRole] = useState<"admin" | "citizen">("citizen")
+  const [role, setRole] = useState<"citizen" | "officer" | "sudo">("citizen")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -89,16 +89,29 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
             </button>
             <button
               type="button"
-              onClick={() => { setRole("admin"); setError("") }}
+              onClick={() => { setRole("officer"); setError("") }}
               className={cn(
                 "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                role === "admin"
+                role === "officer"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Building2 className="h-4 w-4" />
+              Officer
+            </button>
+            <button
+              type="button"
+              onClick={() => { setRole("sudo"); setError("") }}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
+                role === "sudo"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Shield className="h-4 w-4" />
-              Department Admin
+              Sudo
             </button>
           </div>
 
@@ -113,8 +126,9 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                   id="username"
                   type="text"
                   placeholder={
-                    role === "admin" ? "admin@cityshakti.gov.in"
-                      : "citizen@example.com"
+                    role === "sudo" ? "sudo@cityshakti.com"
+                      : role === "officer" ? "officer@example.com"
+                        : "citizen@example.com"
                   }
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -134,8 +148,9 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                   id="password"
                   type="password"
                   placeholder={
-                    role === "admin" ? "Admin Password"
-                      : "Your password"
+                    role === "sudo" ? "Sudo Password"
+                      : role === "officer" ? "Officer Password"
+                        : "Your password"
                   }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -170,7 +185,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
 
           <div className="mt-6 rounded-lg bg-muted/50 p-3">
             <p className="text-xs text-muted-foreground text-center">
-              Demo credentials: <span className="font-mono font-medium text-foreground">admin@cityshakti.gov.in / Admin@123!</span>
+              Demo credentials: <span className="font-mono font-medium text-foreground">sudo@cityshakti.com / adminpassword</span>
             </p>
           </div>
 

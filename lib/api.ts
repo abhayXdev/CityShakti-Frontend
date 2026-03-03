@@ -70,7 +70,7 @@ function transformComplaintDetail(apiComp: any): ComplaintDetail {
     }
 }
 
-export async function loginApi(email: string, password: string, role?: "citizen" | "admin") {
+export async function loginApi(email: string, password: string, role?: "citizen" | "officer" | "sudo") {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -91,7 +91,7 @@ export async function registerApi(payload: {
     full_name: string;
     email: string;
     password: string;
-    role: "citizen" | "admin";
+    role: "citizen" | "officer" | "sudo";
     ward?: string;
     department?: string;
 }) {
@@ -273,5 +273,44 @@ export async function getAdminDirectoryApi(token: string) {
         headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) throw new Error("Failed to fetch admin directory")
+    return res.json()
+}
+
+// ============================================
+// SUDO ADMIN ENDPOINTS
+// ============================================
+
+export async function getPendingOfficersApi(token: string) {
+    const res = await fetch(`${API_BASE_URL}/admin/pending-officers`, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error("Failed to fetch pending officers")
+    return res.json()
+}
+
+export async function approveOfficerApi(token: string, userId: string) {
+    const res = await fetch(`${API_BASE_URL}/admin/approve-officer/${userId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error("Failed to approve officer")
+    return res.json()
+}
+
+export async function rejectOfficerApi(token: string, userId: string) {
+    const res = await fetch(`${API_BASE_URL}/admin/reject-officer/${userId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error("Failed to reject officer")
+    return res.json()
+}
+
+export async function deleteOfficerApi(token: string, userId: string) {
+    const res = await fetch(`${API_BASE_URL}/admin/delete-officer/${userId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error("Failed to delete officer")
     return res.json()
 }

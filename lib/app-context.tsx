@@ -6,7 +6,7 @@ import type { Complaint, Notification } from "@/lib/data"
 import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi } from "@/lib/api"
 
 type AuthUser = {
-  role: "admin" | "citizen"
+  role: "citizen" | "officer" | "sudo"
   name: string
   id: string
   token: string
@@ -16,7 +16,7 @@ type AuthUser = {
 
 type AppContextType = {
   user: AuthUser
-  login: (role: "admin" | "citizen", username: string, password: string) => Promise<boolean>
+  login: (role: "citizen" | "officer" | "sudo", username: string, password: string) => Promise<boolean>
   logout: () => void
   complaints: Complaint[]
   wardComplaints: Complaint[]
@@ -60,7 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       getMeApi(savedToken)
         .then((profile) => {
           setUser({
-            role: profile.role as "admin" | "citizen",
+            role: profile.role as "citizen" | "officer" | "sudo",
             name: profile.full_name,
             id: String(profile.id),
             token: savedToken,
@@ -92,7 +92,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Generate dynamic notifications from real database records
   useEffect(() => {
-    const sourceData = user?.role === "admin" ? complaints : wardComplaints;
+    const sourceData = user?.role === "sudo" ? complaints : wardComplaints;
     const generatedNotifs: Notification[] = [];
 
     sourceData.forEach(c => {
@@ -121,7 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (role: string, username: string, password: string): Promise<boolean> => {
       try {
-        const data = await loginApi(username, password, role as "citizen" | "admin")
+        const data = await loginApi(username, password, role as "citizen" | "officer" | "sudo")
         const token = data.access_token
 
         // Fetch real user profile to get role, name, id
@@ -134,7 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Frontend guard: if actual role doesn't match selected tab, reject immediately
         if (profile && profile.role !== role) {
-          const correct = profile.role === "admin" ? "Department Admin" : "Citizen"
+          const correct = profile.role === "sudo" ? "Sudo" : (profile.role === "officer" ? "Officer" : "Citizen")
           throw new Error(`This account is registered as '${profile.role}'. Please select the '${correct}' tab to sign in.`)
         }
 
@@ -142,7 +142,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("token", token)
 
         setUser({
-          role: (profile?.role || role || "citizen") as "admin" | "citizen",
+          role: (profile?.role || role || "citizen") as "citizen" | "officer" | "sudo",
           name: profile?.full_name || username,
           id: String(profile?.id || username),
           token,

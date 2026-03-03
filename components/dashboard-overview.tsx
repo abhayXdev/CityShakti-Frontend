@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useApp } from "@/lib/app-context"
 import { getStats, type ComplaintDetail, type Complaint } from "@/lib/data"
-import { getComplaintDetailApi } from "@/lib/api"
+import { getComplaintDetailApi, getPendingOfficersApi, approveOfficerApi, rejectOfficerApi, deleteOfficerApi, getAdminDirectoryApi } from "@/lib/api"
 import {
   ClipboardList,
   CheckCircle2,
@@ -96,6 +96,10 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
   const stats = getStats(complaints)
 
   const isCitizen = user?.role === "citizen"
+
+  if (user?.role === "sudo") {
+    return <SudoDashboard />
+  }
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -840,4 +844,153 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       </Table>
     )
   }
+}
+
+function SudoDashboard() {
+  const { user } = useApp()
+  const [pendingOfficers, setPendingOfficers] = useState<any[]>([])
+  const [activeOfficers, setActiveOfficers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchOfficers = () => {
+    if (!user?.token) return
+    setLoading(true)
+    Promise.all([
+      getPendingOfficersApi(user.token).then(setPendingOfficers).catch(console.error),
+      getAdminDirectoryApi(user.token).then(setActiveOfficers).catch(console.error)
+    ]).finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchOfficers()
+  }, [user?.token])
+
+  const handleApprove = async (id: string) => {
+    if (!user?.token) return
+    try {
+      await approveOfficerApi(user.token, id)
+      fetchOfficers()
+    } catch (e: any) { alert(e.message || "Failed to approve"); console.error(e) }
+  }
+
+  const handleReject = async (id: string) => {
+    if (!user?.token) return
+    try {
+      if (confirm("Reject this officer registration? This will permanently delete their request.")) {
+        await rejectOfficerApi(user.token, id)
+        fetchOfficers()
+      }
+    } catch (e: any) { alert(e.message || "Failed to reject"); console.error(e) }
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!user?.token) return
+    try {
+      if (confirm(`Are you sure you want to permanently delete the officer account for ${name}?`)) {
+        await deleteOfficerApi(user.token, id)
+        fetchOfficers()
+      }
+    } catch (e: any) { alert(e.message || "Failed to delete"); console.error(e) }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-blue-500/10 p-8 md:p-12 shadow-sm mb-6">
+        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+          <AlertCircle className="w-64 h-64 text-primary" />
+        </div>
+        <div className="relative z-10 max-w-2xl">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 flex items-center gap-3">
+            System Administration <Badge variant="default" className="text-base uppercase">Sudo</Badge>
+          </h1>
+          <p className="text-lg text-muted-foreground mb-8 text-balance">
+            Manage global platform operations, securely approve new department officer accounts, and oversee system hierarchy.
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Officer Approvals</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground text-sm animate-pulse">Loading pending officer requests...</div>
+          ) : pendingOfficers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">No pending officer registrations.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Email Address</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>PIN Code</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingOfficers.map(officer => (
+                    <TableRow key={officer.id}>
+                      <TableCell className="font-medium whitespace-nowrap">{officer.full_name}</TableCell>
+                      <TableCell>{officer.email}</TableCell>
+                      <TableCell>{officer.department}</TableCell>
+                      <TableCell>{officer.ward}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline" className="border-success/50 text-success hover:bg-success/10 w-24" onClick={() => handleApprove(String(officer.id))}>Approve</Button>
+                          <Button size="sm" variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10 w-24" onClick={() => handleReject(String(officer.id))}>Reject</Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Department Officers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground text-sm animate-pulse">Loading active directory...</div>
+          ) : activeOfficers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">No active officers found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Email Address</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>PIN Code</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeOfficers.map(officer => (
+                    <TableRow key={officer.id}>
+                      <TableCell className="font-medium whitespace-nowrap">{officer.full_name}</TableCell>
+                      <TableCell>{officer.email}</TableCell>
+                      <TableCell>{officer.department}</TableCell>
+                      <TableCell>{officer.ward}</TableCell>
+                      <TableCell className="text-right flex justify-end">
+                        <Button size="sm" variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(String(officer.id), officer.full_name)}>Delete</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
