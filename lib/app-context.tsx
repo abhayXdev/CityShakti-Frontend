@@ -121,7 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (role: string, username: string, password: string) => {
       try {
-        const data = await loginApi(username, password)
+        const data = await loginApi(username, password, role as "citizen" | "admin")
         const token = data.access_token
 
         // Fetch real user profile to get role, name, id

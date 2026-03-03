@@ -173,7 +173,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
           </div>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">New citizen? </span>
+            <span className="text-muted-foreground">Don't have an account? </span>
             <button
               onClick={onSwitchToRegister}
               className="text-primary font-medium hover:underline focus:outline-none"

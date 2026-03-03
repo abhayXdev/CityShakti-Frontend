@@ -70,13 +70,13 @@ function transformComplaintDetail(apiComp: any): ComplaintDetail {
     }
 }
 
-export async function loginApi(email: string, password: string) {
+export async function loginApi(email: string, password: string, role?: "citizen" | "admin") {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }),
     })
 
     if (!res.ok) {
