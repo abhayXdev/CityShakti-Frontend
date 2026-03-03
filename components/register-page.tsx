@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useApp } from "@/lib/app-context"
-import { Shield, User, Lock, ArrowRight, AlertCircle, Building2, Mail } from "lucide-react"
+import { Shield, User, Lock, ArrowRight, AlertCircle, Building2, Mail, MapPin, Loader2, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { registerApi } from "@/lib/api"
+import { fetchPincodeInfo, formatPincodeArea, type PincodeInfo, type PincodeStatus } from "@/lib/pincode"
 
 interface RegisterPageProps {
     onBackToLogin: () => void
@@ -19,11 +19,32 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     const [fullName, setFullName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [ward, setWard] = useState("")
+    const [pincode, setPincode] = useState("")
+    const [pincodeInfo, setPincodeInfo] = useState<PincodeInfo | null>(null)
+    const [pincodeStatus, setPincodeStatus] = useState<PincodeStatus>("idle")
     const [department, setDepartment] = useState("")
     const [error, setError] = useState("")
     const [successMsg, setSuccessMsg] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+
+    // Auto-lookup pincode when 6 digits entered
+    useEffect(() => {
+        if (pincode.length !== 6) {
+            setPincodeInfo(null)
+            setPincodeStatus(pincode.length === 0 ? "idle" : "idle")
+            return
+        }
+        setPincodeStatus("loading")
+        fetchPincodeInfo(pincode).then((info) => {
+            if (info) {
+                setPincodeInfo(info)
+                setPincodeStatus("valid")
+            } else {
+                setPincodeInfo(null)
+                setPincodeStatus("invalid")
+            }
+        })
+    }, [pincode])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -37,12 +58,24 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             return
         }
 
+        if (role === "admin" && !pincode) {
+            setError("PIN Code is required for Department Admins.")
+            setIsLoading(false)
+            return
+        }
+
+        if (pincode && pincodeStatus !== "valid") {
+            setError("Please enter a valid 6-digit PIN code.")
+            setIsLoading(false)
+            return
+        }
+
         try {
             await registerApi({
                 full_name: fullName,
                 email,
                 password,
-                ward: role === "citizen" ? ward || undefined : undefined,
+                ward: pincode || undefined,
                 department: role === "admin" ? department || undefined : undefined,
                 role: role
             })
@@ -181,10 +214,52 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             </div>
                         </div>
 
-                        {role === "admin" ? (
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="pincode" className="text-sm font-medium text-foreground">
+                                PIN Code {role === "admin" ? <span className="text-destructive">*</span> : <span className="text-muted-foreground font-normal">(Optional)</span>}
+                            </Label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    id="pincode"
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="6-digit PIN code e.g. 110001"
+                                    value={pincode}
+                                    maxLength={6}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, "")
+                                        setPincode(val)
+                                        setPincodeInfo(null)
+                                        setPincodeStatus("idle")
+                                    }}
+                                    className={cn(
+                                        "h-11 pl-10 pr-10",
+                                        pincodeStatus === "valid" && "border-green-500 focus-visible:ring-green-500/30",
+                                        pincodeStatus === "invalid" && "border-destructive focus-visible:ring-destructive/30"
+                                    )}
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {pincodeStatus === "loading" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                                    {pincodeStatus === "valid" && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                    {pincodeStatus === "invalid" && <AlertCircle className="h-4 w-4 text-destructive" />}
+                                </div>
+                            </div>
+                            {pincodeStatus === "valid" && pincodeInfo && (
+                                <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md px-3 py-1.5">
+                                    <MapPin className="h-3 w-3 shrink-0" />
+                                    {formatPincodeArea(pincodeInfo)}
+                                </div>
+                            )}
+                            {pincodeStatus === "invalid" && (
+                                <p className="text-xs text-destructive">Invalid PIN code. Please enter a valid 6-digit Indian PIN code.</p>
+                            )}
+                        </div>
+
+                        {role === "admin" && (
                             <div className="flex flex-col gap-2">
                                 <Label htmlFor="department" className="text-sm font-medium text-foreground">
-                                    Assigned Department
+                                    Assigned Department <span className="text-destructive">*</span>
                                 </Label>
                                 <div className="relative">
                                     <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
@@ -193,7 +268,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                                         value={department}
                                         onChange={(e) => setDepartment(e.target.value)}
                                         required
-                                        className="h-11 w-full rounded-md border border-input bg-transparent pl-10 pr-3 text-sm text-foreground shadow-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                        className="h-11 w-full rounded-md border border-input bg-transparent pl-10 pr-3 text-sm text-foreground shadow-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 appearance-none bg-background"
                                     >
                                         <option value="" disabled>Select your department</option>
                                         <option value="Sanitation">Sanitation</option>
@@ -204,23 +279,6 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                                         <option value="Parks & Recreation">Parks &amp; Recreation</option>
                                     </select>
                                     <svg className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="ward" className="text-sm font-medium text-foreground">
-                                    Ward / Area (Optional)
-                                </Label>
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                    <Input
-                                        id="ward"
-                                        type="text"
-                                        placeholder="E.g. Ward 12 or Connaught Place"
-                                        value={ward}
-                                        onChange={(e) => setWard(e.target.value)}
-                                        className="h-11 pl-10"
-                                    />
                                 </div>
                             </div>
                         )}
