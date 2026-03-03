@@ -4,13 +4,7 @@ import { useState } from "react"
 import { useApp } from "@/lib/app-context"
 import { Shield, User, Lock, ArrowRight, AlertCircle, Building2, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
@@ -193,22 +187,23 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                                     Assigned Department
                                 </Label>
                                 <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 text-muted-foreground flex items-center justify-center pointer-events-none">
-                                        <Building2 className="h-4 w-4" />
-                                    </div>
-                                    <Select value={department} onValueChange={setDepartment} required>
-                                        <SelectTrigger id="department" className="h-[44px] pl-10 w-full text-foreground data-[placeholder]:text-muted-foreground outline-none ring-0 focus:ring-0">
-                                            <SelectValue placeholder="Select your department" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Sanitation">Sanitation</SelectItem>
-                                            <SelectItem value="Water Supply">Water Supply</SelectItem>
-                                            <SelectItem value="Electricity">Electricity</SelectItem>
-                                            <SelectItem value="Roads & Transport">Roads & Transport</SelectItem>
-                                            <SelectItem value="Public Health">Public Health</SelectItem>
-                                            <SelectItem value="Parks & Recreation">Parks & Recreation</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
+                                    <select
+                                        id="department"
+                                        value={department}
+                                        onChange={(e) => setDepartment(e.target.value)}
+                                        required
+                                        className="h-11 w-full rounded-md border border-input bg-transparent pl-10 pr-3 text-sm text-foreground shadow-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                    >
+                                        <option value="" disabled>Select your department</option>
+                                        <option value="Sanitation">Sanitation</option>
+                                        <option value="Water Supply">Water Supply</option>
+                                        <option value="Electricity">Electricity</option>
+                                        <option value="Roads & Transport">Roads &amp; Transport</option>
+                                        <option value="Public Health">Public Health</option>
+                                        <option value="Parks & Recreation">Parks &amp; Recreation</option>
+                                    </select>
+                                    <svg className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                                 </div>
                             </div>
                         ) : (
