@@ -183,11 +183,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
             </Button>
           </form>
 
-          <div className="mt-6 rounded-lg bg-muted/50 p-3">
-            <p className="text-xs text-muted-foreground text-center">
-              Demo credentials: <span className="font-mono font-medium text-foreground">sudo@cityshakti.com / adminpassword</span>
-            </p>
-          </div>
+
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>

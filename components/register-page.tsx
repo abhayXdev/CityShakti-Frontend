@@ -146,7 +146,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             type="button"
                             onClick={() => setRole("officer")}
                             className={cn(
-                                "flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                                "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
                                 role === "officer"
                                     ? "bg-primary text-primary-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground"
