@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useApp } from "@/lib/app-context"
 import { getStats, type ComplaintDetail, type Complaint } from "@/lib/data"
-import { getComplaintDetailApi, getPendingOfficersApi, approveOfficerApi, rejectOfficerApi, deleteOfficerApi, getAdminDirectoryApi } from "@/lib/api"
+import { getComplaintDetailApi, getPendingOfficersApi, approveOfficerApi, rejectOfficerApi, deleteOfficerApi, getAdminDirectoryApi, suspendOfficerApi, unsuspendOfficerApi } from "@/lib/api"
 import {
   ClipboardList,
   CheckCircle2,
@@ -893,6 +893,26 @@ function SudoDashboard() {
     } catch (e: any) { alert(e.message || "Failed to delete"); console.error(e) }
   }
 
+  const handleSuspend = async (id: string, name: string) => {
+    if (!user?.token) return
+    try {
+      if (confirm(`Suspend officer ${name}? They will lose login access but their account remains.`)) {
+        await suspendOfficerApi(user.token, id)
+        fetchOfficers()
+      }
+    } catch (e: any) { alert(e.message || "Failed to suspend"); console.error(e) }
+  }
+
+  const handleUnsuspend = async (id: string, name: string) => {
+    if (!user?.token) return
+    try {
+      if (confirm(`Restore login access for officer ${name}?`)) {
+        await unsuspendOfficerApi(user.token, id)
+        fetchOfficers()
+      }
+    } catch (e: any) { alert(e.message || "Failed to unsuspend"); console.error(e) }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-blue-500/10 p-8 md:p-12 shadow-sm mb-6">
@@ -970,6 +990,7 @@ function SudoDashboard() {
                     <TableHead>Email Address</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>PIN Code</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -980,7 +1001,17 @@ function SudoDashboard() {
                       <TableCell>{officer.email}</TableCell>
                       <TableCell>{officer.department}</TableCell>
                       <TableCell>{officer.ward}</TableCell>
-                      <TableCell className="text-right flex justify-end">
+                      <TableCell>
+                        <Badge variant={officer.is_suspended ? "destructive" : "secondary"}>
+                          {officer.is_suspended ? "Suspended" : "Active"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right flex justify-end gap-2">
+                        {officer.is_suspended ? (
+                          <Button size="sm" variant="outline" className="border-warning/50 text-warning hover:bg-warning/10" onClick={() => handleUnsuspend(String(officer.id), officer.full_name)}>Unsuspend</Button>
+                        ) : (
+                          <Button size="sm" variant="outline" className="border-warning/50 text-warning hover:bg-warning/10" onClick={() => handleSuspend(String(officer.id), officer.full_name)}>Suspend</Button>
+                        )}
                         <Button size="sm" variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(String(officer.id), officer.full_name)}>Delete</Button>
                       </TableCell>
                     </TableRow>

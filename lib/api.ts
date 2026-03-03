@@ -314,3 +314,21 @@ export async function deleteOfficerApi(token: string, userId: string) {
     if (!res.ok) throw new Error("Failed to delete officer")
     return res.json()
 }
+
+export async function suspendOfficerApi(token: string, userId: string) {
+    const res = await fetch(`${API_BASE_URL}/admin/suspend-officer/${userId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error("Failed to suspend officer")
+    return res.json()
+}
+
+export async function unsuspendOfficerApi(token: string, userId: string) {
+    const res = await fetch(`${API_BASE_URL}/admin/unsuspend-officer/${userId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error("Failed to unsuspend officer")
+    return res.json()
+}
