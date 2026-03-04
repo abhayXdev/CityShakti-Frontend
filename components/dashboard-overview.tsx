@@ -634,9 +634,16 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                       Reported by {complaintDetail.citizenName} in {complaintDetail.location.area}
                     </DialogDescription>
                   </div>
-                  <Badge className={cn("capitalize border-0 whitespace-nowrap", statusColors[complaintDetail.status])}>
-                    {complaintDetail.status}
-                  </Badge>
+                  {(() => {
+                    const displayStatus = (complaintDetail.isSlaBreached && complaintDetail.status !== "closed" && complaintDetail.status !== "resolved")
+                      ? "escalated"
+                      : complaintDetail.status;
+                    return (
+                      <Badge className={cn("capitalize border-0 whitespace-nowrap", statusColors[displayStatus] || statusColors.pending)}>
+                        {displayStatus}
+                      </Badge>
+                    )
+                  })()}
                 </div>
               </DialogHeader>
               <div className="grid gap-6 py-4">
@@ -936,14 +943,21 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge
-                  className={cn(
-                    "text-[10px] capitalize border-0",
-                    statusColors[complaint.status]
-                  )}
-                >
-                  {complaint.status}
-                </Badge>
+                {(() => {
+                  const displayStatus = (complaint.isSlaBreached && complaint.status !== "closed" && complaint.status !== "resolved")
+                    ? "escalated"
+                    : complaint.status;
+                  return (
+                    <Badge
+                      className={cn(
+                        "text-[10px] capitalize border-0",
+                        statusColors[displayStatus] || statusColors.pending
+                      )}
+                    >
+                      {displayStatus}
+                    </Badge>
+                  )
+                })()}
               </TableCell>
               <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
                 {new Date(complaint.createdAt).toLocaleDateString("en-IN", {

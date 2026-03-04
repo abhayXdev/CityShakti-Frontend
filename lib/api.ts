@@ -15,6 +15,8 @@ function mapStatus(backendStatus: string): Complaint["status"] {
         case "Resolved":
         case "Rejected":
             return "resolved"
+        case "Closed":
+            return "closed"
         default:
             return "escalated" // Fallback if escalation level > 0 in future
     }
@@ -44,6 +46,7 @@ function transformComplaint(apiComp: any): Complaint {
         createdAt: apiComp.created_at,
         updatedAt: apiComp.updated_at || apiComp.created_at,
         department: apiComp.assigned_department || apiComp.category || "General",
+        isSlaBreached: apiComp.is_sla_breached || false,
     }
 }
 

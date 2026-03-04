@@ -16,6 +16,7 @@ export type Complaint = {
   photoUrl?: string | null
   upvotes: number
   impactScore: number
+  isSlaBreached?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -130,7 +131,9 @@ export function getStats(complaintsList: Complaint[] = complaints) {
   const inProgress = complaintsList.filter(
     (c) => c.status === "in-progress"
   ).length
-  const escalated = complaintsList.filter((c) => c.status === "escalated" || (c as any).is_sla_breached).length
+  const escalated = complaintsList.filter(
+    (c) => (c.status === "escalated" || c.isSlaBreached) && c.status !== "closed" && c.status !== "resolved"
+  ).length
   const highPriority = complaintsList.filter(
     (c) => c.priority === "high"
   ).length
@@ -155,7 +158,9 @@ export function getStatusData(complaintsList: Complaint[] = complaints) {
   const inProgress = complaintsList.filter(
     (c) => c.status === "in-progress"
   ).length
-  const escalated = complaintsList.filter((c) => c.status === "escalated").length
+  const escalated = complaintsList.filter(
+    (c) => (c.status === "escalated" || c.isSlaBreached) && c.status !== "closed" && c.status !== "resolved"
+  ).length
   return [
     { name: "Resolved", value: resolved, fill: "var(--color-chart-2)" },
     { name: "Pending", value: pending, fill: "var(--color-chart-4)" },
