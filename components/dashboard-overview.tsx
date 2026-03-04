@@ -425,7 +425,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         </div>
                         <div className="grid gap-2">
                           <div className="flex items-center justify-between">
-                            <Label>Precise Location (Optional)</Label>
+                            <Label>Precise Location <span className="text-destructive">*</span></Label>
                           </div>
                           <div className="flex items-center gap-4">
                             <Button
@@ -438,10 +438,14 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                               {formData.latitude && formData.longitude ? "Update Location" : "Get Current Location"}
                             </Button>
                           </div>
-                          {formData.latitude && formData.longitude && (
+                          {formData.latitude && formData.longitude ? (
                             <p className="text-xs text-success bg-success/10 px-3 py-1.5 rounded-md mt-1 border border-success/20 flex items-center justify-between">
                               <span>Location Captured Successfully</span>
                               <span className="font-mono text-[10px] opacity-70">{formData.latitude}, {formData.longitude}</span>
+                            </p>
+                          ) : (
+                            <p className="text-xs text-destructive bg-destructive/10 px-3 py-1.5 rounded-md mt-1 border border-destructive/20 flex items-center justify-between">
+                              <span>Location is required to file a report.</span>
                             </p>
                           )}
                         </div>
@@ -450,7 +454,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting || uploadingImage}>
                           Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting || uploadingImage}>
+                        <Button type="submit" disabled={isSubmitting || uploadingImage || !formData.latitude || !formData.longitude}>
                           {isSubmitting || uploadingImage ? "Uploading & Submitting..." : "Submit Complaint"}
                         </Button>
                       </DialogFooter>
