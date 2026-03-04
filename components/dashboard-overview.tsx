@@ -215,8 +215,9 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       setIsDialogOpen(false)
       setFormData({ title: "", category: "", description: "", latitude: "", longitude: "", photo_url: "", incident_ward: "" })
       setSelectedFile(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit complaint:", error)
+      alert(`Submission Failed: ${error?.message || "Please check your inputs and try again."}`)
       setUploadingImage(false)
     } finally {
       setIsSubmitting(false)
