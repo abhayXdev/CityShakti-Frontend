@@ -97,20 +97,69 @@ export async function registerApi(payload: {
     role: "citizen" | "officer" | "sudo";
     ward?: string;
     department?: string;
+    phone?: string;
 }) {
     const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
     })
-
     if (!res.ok) {
         const errorData = await res.json()
         throw new Error(errorData.detail || "Registration failed")
     }
+    return res.json()
+}
 
+export async function sendEmailOtpApi(email: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/send-email-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+    })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Failed to send OTP" }))
+        throw new Error(err.detail || "Failed to send OTP")
+    }
+    return res.json()
+}
+
+export async function verifyEmailOtpApi(email: string, otp_code: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-email-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp_code }),
+    })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Invalid OTP" }))
+        throw new Error(err.detail || "Invalid OTP")
+    }
+    return res.json()
+}
+
+export async function forgotPasswordApi(email: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+    })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Failed" }))
+        throw new Error(err.detail || "Request failed")
+    }
+    return res.json()
+}
+
+export async function resetPasswordApi(email: string, otp_code: string, new_password: string) {
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp_code, new_password }),
+    })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Reset failed" }))
+        throw new Error(err.detail || "Password reset failed")
+    }
     return res.json()
 }
 
