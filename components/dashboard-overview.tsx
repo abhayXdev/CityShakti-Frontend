@@ -401,10 +401,10 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                           </div>
                           <div className="grid gap-2 border border-primary/10 bg-primary/5 rounded-md p-3">
                             <Label className="text-sm font-semibold flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-primary" /> Region Locked
+                              <MapPin className="h-4 w-4 text-primary" /> Smart Routing
                             </Label>
                             <p className="text-xs text-muted-foreground">
-                              This complaint will automatically be filed in your registered PIN code region <strong>({user?.ward})</strong>.
+                              This complaint will automatically be assigned to the department responsible for your precise incident location.
                             </p>
                           </div>
                         </div>
@@ -619,7 +619,14 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
               <DialogHeader>
                 <div className="flex items-start justify-between pe-6">
                   <div>
-                    <DialogTitle className="text-xl leading-tight pr-4">{complaintDetail.title}</DialogTitle>
+                    <DialogTitle className="text-xl leading-tight pr-4 flex items-center flex-wrap gap-2">
+                      {complaintDetail.title}
+                      {isCitizen && user?.ward && complaintDetail.location.area && user.ward !== complaintDetail.location.area && (
+                        <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-500 border-amber-500/20">
+                          Out Of Bound (Routed to {complaintDetail.location.area})
+                        </Badge>
+                      )}
+                    </DialogTitle>
                     <DialogDescription className="mt-1">
                       Reported by {complaintDetail.citizenName} in {complaintDetail.location.area}
                     </DialogDescription>
@@ -747,11 +754,12 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                           });
                         } catch (e: any) { alert(e.message) }
                       }}
+                      disabled={complaintDetail.authorId === user?.id || upvotedIds.has(complaintDetail.id)}
                       variant="secondary"
                       size="sm"
                       className="gap-1"
                     >
-                      <ChevronUp className="h-4 w-4" /> +1 Upvote
+                      <ChevronUp className="h-4 w-4" /> {complaintDetail.authorId === user?.id ? "Your Report" : upvotedIds.has(complaintDetail.id) ? "Upvoted" : "+1 Upvote"}
                     </Button>
                   </div>
                 )}
@@ -867,7 +875,12 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 #{complaint.id.substring(0, 4)}
               </TableCell>
               <TableCell className="max-w-[200px] text-sm py-3">
-                <p className="font-medium truncate">{complaint.title}</p>
+                <p className="font-medium truncate flex items-center gap-1">
+                  {complaint.title}
+                  {isCitizen && user?.ward && complaint.location.area && user.ward !== complaint.location.area && (
+                    <AlertCircle className="h-3 w-3 text-amber-500 shrink-0" title={`Out of Bound: Routed to ${complaint.location.area}`} />
+                  )}
+                </p>
                 <p className="text-[10px] text-muted-foreground truncate">{complaint.location.area}</p>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
