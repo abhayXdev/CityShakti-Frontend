@@ -191,7 +191,7 @@ export function DashboardLayout() {
                 })}
               </span>
               <Badge variant="outline" className="text-[10px]">
-                {user?.role === "admin" ? "Admin Department Access" : "Citizen Access"}
+                {user?.role === "sudo" ? "Admin Department Access" : "Citizen Access"}
               </Badge>
             </div>
           </div>

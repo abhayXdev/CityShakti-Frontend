@@ -856,45 +856,56 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                       <AlertTriangle className="w-4 h-4 text-chart-4" />
                       Administrator Controls
                     </h4>
-                    {user?.department === complaintDetail.department ? (
-                      <>
-                        <div className="flex gap-2 mb-4">
-                          <Button size="sm" variant={complaintDetail.status === 'in-progress' ? "default" : "outline"} onClick={async () => {
-                            await updateComplaintStatus(complaintDetail.id, "in-progress")
-                            setComplaintDetail({ ...complaintDetail, status: "in-progress" })
-                          }}>Mark In-Progress</Button>
-                          <Button size="sm" variant={complaintDetail.status === 'resolved' ? "default" : "outline"} className={complaintDetail.status === 'resolved' ? "bg-success hover:bg-success/90" : ""} onClick={async () => {
-                            await updateComplaintStatus(complaintDetail.id, "resolved")
-                            setComplaintDetail({ ...complaintDetail, status: "resolved" })
-                          }}>Mark Resolved</Button>
-                        </div>
-                        <div className="grid gap-3 border border-primary/10 p-4 rounded-xl bg-background shadow-sm">
-                          <Label className="text-xs font-semibold">Publish Public Progress Update</Label>
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <Select value={progressPhase} onValueChange={setProgressPhase}>
-                              <SelectTrigger className="w-full sm:w-[140px] text-xs h-9"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="update">General Update</SelectItem>
-                                <SelectItem value="before">Before Work</SelectItem>
-                                <SelectItem value="after">After Completion</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input className="h-9 text-xs" placeholder="Official note for citizens..." value={progressNote} onChange={e => setProgressNote(e.target.value)} />
+                    {(() => {
+                      const normalize = (str: string | undefined | null) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                      const isSameDept = normalize(user?.department) === normalize(complaintDetail.department) ||
+                        normalize(user?.department).includes(normalize(complaintDetail.department).replace('s', '')) ||
+                        normalize(complaintDetail.department).includes(normalize(user?.department).replace('s', ''));
+
+                      if (isSameDept) {
+                        return (
+                          <>
+                            <div className="flex gap-2 mb-4">
+                              <Button size="sm" variant={complaintDetail.status === 'in-progress' ? "default" : "outline"} onClick={async () => {
+                                await updateComplaintStatus(complaintDetail.id, "in-progress")
+                                setComplaintDetail({ ...complaintDetail, status: "in-progress" })
+                              }}>Mark In-Progress</Button>
+                              <Button size="sm" variant={complaintDetail.status === 'resolved' ? "default" : "outline"} className={complaintDetail.status === 'resolved' ? "bg-success hover:bg-success/90" : ""} onClick={async () => {
+                                await updateComplaintStatus(complaintDetail.id, "resolved")
+                                setComplaintDetail({ ...complaintDetail, status: "resolved" })
+                              }}>Mark Resolved</Button>
+                            </div>
+                            <div className="grid gap-3 border border-primary/10 p-4 rounded-xl bg-background shadow-sm">
+                              <Label className="text-xs font-semibold">Publish Public Progress Update</Label>
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <Select value={progressPhase} onValueChange={setProgressPhase}>
+                                  <SelectTrigger className="w-full sm:w-[140px] text-xs h-9"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="update">General Update</SelectItem>
+                                    <SelectItem value="before">Before Work</SelectItem>
+                                    <SelectItem value="after">After Completion</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input className="h-9 text-xs" placeholder="Official note for citizens..." value={progressNote} onChange={e => setProgressNote(e.target.value)} />
+                              </div>
+                              <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end" onClick={async () => {
+                                if (!user?.token) return;
+                                await addProgressUpdate(complaintDetail.id, { phase: progressPhase, note: progressNote })
+                                setProgressNote("")
+                                getComplaintDetailApi(user.token, selectedComplaintId!).then(data => setComplaintDetail(data))
+                              }}>Post Official Update</Button>
+                            </div>
+                          </>
+                        );
+                      } else {
+                        return (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground p-4 bg-background border border-primary/10 rounded-xl">
+                            <AlertCircle className="h-4 w-4 shrink-0 px-0.5" />
+                            You can only resolve complaints assigned to your department ({user?.department || 'Unassigned'}). This issue is handled by {complaintDetail.department}.
                           </div>
-                          <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end" onClick={async () => {
-                            if (!user?.token) return;
-                            await addProgressUpdate(complaintDetail.id, { phase: progressPhase, note: progressNote })
-                            setProgressNote("")
-                            getComplaintDetailApi(user.token, selectedComplaintId!).then(data => setComplaintDetail(data))
-                          }}>Post Official Update</Button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground p-4 bg-background border border-primary/10 rounded-xl">
-                        <AlertCircle className="h-4 w-4 shrink-0 px-0.5" />
-                        You can only resolve complaints assigned to your department ({user?.department || 'Unassigned'}). This issue is handled by {complaintDetail.department}.
-                      </div>
-                    )}
+                        );
+                      }
+                    })()}
                   </div>
                 )}
 
