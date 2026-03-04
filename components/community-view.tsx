@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { formatDistanceToNow } from "date-fns"
 import {
     Dialog,
     DialogContent,
@@ -31,7 +30,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { CheckCircle2, ChevronUp, MapPin, Building2, UserCircle2, Clock } from "lucide-react"
+import { CheckCircle2, ChevronUp, MapPin, Building2, UserCircle2, Clock, Maximize2 } from "lucide-react"
+import { formatDistanceToNow, isPast, format } from "date-fns"
 import { cn } from "@/lib/utils"
 
 const priorityColors: Record<string, string> = {
@@ -53,6 +53,10 @@ export function CommunityView() {
     const [complaintDetail, setComplaintDetail] = useState<ComplaintDetail | null>(null)
     const [loadingDetail, setLoadingDetail] = useState(false)
     const [upvoting, setUpvoting] = useState(false)
+
+    // Image Viewer State
+    const [viewerOpen, setViewerOpen] = useState(false)
+    const [viewerImage, setViewerImage] = useState<string | null>(null)
 
     const recentWardComplaints = [...wardComplaints]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -241,6 +245,27 @@ export function CommunityView() {
                                     </div>
                                 </div>
 
+                                {complaintDetail.expectedResolutionDate && complaintDetail.status !== "resolved" && complaintDetail.status !== "closed" && (
+                                    <div className={cn(
+                                        "p-4 rounded-xl border flex items-center gap-3 mt-2",
+                                        isPast(new Date(complaintDetail.expectedResolutionDate))
+                                            ? "bg-destructive/10 border-destructive/20 text-destructive"
+                                            : "bg-primary/5 border-primary/20 text-primary"
+                                    )}>
+                                        <Clock className="h-5 w-5" />
+                                        <div>
+                                            <p className="font-semibold text-sm">
+                                                {isPast(new Date(complaintDetail.expectedResolutionDate)) ? "SLA Deadline Breached" : "Expected Resolution"}
+                                            </p>
+                                            <p className="text-xs opacity-90">
+                                                {isPast(new Date(complaintDetail.expectedResolutionDate))
+                                                    ? `Overdue by ${formatDistanceToNow(new Date(complaintDetail.expectedResolutionDate))}`
+                                                    : `Target: ${format(new Date(complaintDetail.expectedResolutionDate), "PPp")} (${formatDistanceToNow(new Date(complaintDetail.expectedResolutionDate), { addSuffix: true })})`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-semibold">Description</h4>
                                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -250,11 +275,22 @@ export function CommunityView() {
 
                                 {complaintDetail.photoUrl && (
                                     <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold">Attachment</h4>
+                                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                                            Attachment
+                                            <Badge variant="secondary" className="text-[10px] font-normal cursor-pointer" onClick={() => { setViewerImage(complaintDetail.photoUrl!); setViewerOpen(true); }}>
+                                                <Maximize2 className="h-3 w-3 mr-1" /> View Full Image
+                                            </Badge>
+                                        </h4>
                                         <div className="flex gap-2 overflow-x-auto pb-2">
-                                            <a href={complaintDetail.photoUrl} target="_blank" rel="noreferrer" className="shrink-0">
-                                                <img src={complaintDetail.photoUrl} alt="Attachment" className="h-24 w-24 object-cover rounded-md border" />
-                                            </a>
+                                            <div
+                                                className="shrink-0 relative group cursor-pointer"
+                                                onClick={() => { setViewerImage(complaintDetail.photoUrl!); setViewerOpen(true); }}
+                                            >
+                                                <img src={complaintDetail.photoUrl} alt="Attachment" className="h-24 w-24 object-cover rounded-md border group-hover:opacity-80 transition-opacity" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
+                                                    <Maximize2 className="h-5 w-5 text-white" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -314,6 +350,19 @@ export function CommunityView() {
                             </div>
                         </>
                     ) : null}
+                </DialogContent>
+            </Dialog>
+
+            {/* Fullscreen Image Viewer Modal */}
+            <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+                <DialogContent className="max-w-[90vw] max-h-[90vh] p-1 bg-black border-none [&>button]:text-white">
+                    <DialogTitle className="sr-only">Image Viewer</DialogTitle>
+                    <DialogDescription className="sr-only">Full resolution view of the uploaded evidence.</DialogDescription>
+                    {viewerImage && (
+                        <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-md">
+                            <img src={viewerImage} alt="Full Resolution Evidence" className="max-w-full max-h-[85vh] object-contain" />
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
 

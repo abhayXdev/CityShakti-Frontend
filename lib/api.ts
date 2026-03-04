@@ -47,6 +47,7 @@ function transformComplaint(apiComp: any): Complaint {
         updatedAt: apiComp.updated_at || apiComp.created_at,
         department: apiComp.assigned_department || apiComp.category || "General",
         isSlaBreached: apiComp.is_sla_breached || false,
+        expectedResolutionDate: apiComp.expected_resolution_date || null,
     }
 }
 

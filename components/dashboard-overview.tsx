@@ -57,8 +57,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
+import { formatDistanceToNow, isPast, format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { MapPin } from "lucide-react"
+import { MapPin, Maximize2 } from "lucide-react"
 
 function AnimatedCounter({ target, duration = 1200 }: { target: number; duration?: number }) {
   const [count, setCount] = useState(0)
@@ -124,6 +125,10 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
   const [selectedComplaintId, setSelectedComplaintId] = useState<string | null>(null)
   const [complaintDetail, setComplaintDetail] = useState<ComplaintDetail | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+
+  // Image Viewer State
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerImage, setViewerImage] = useState<string | null>(null)
 
   const [progressPhase, setProgressPhase] = useState("update")
   const [progressNote, setProgressNote] = useState("")
@@ -687,6 +692,27 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                   </div>
                 </div>
 
+                {complaintDetail.expectedResolutionDate && complaintDetail.status !== "resolved" && complaintDetail.status !== "closed" && (
+                  <div className={cn(
+                    "p-4 rounded-xl border flex items-center gap-3",
+                    isPast(new Date(complaintDetail.expectedResolutionDate))
+                      ? "bg-destructive/10 border-destructive/20 text-destructive"
+                      : "bg-primary/5 border-primary/20 text-primary"
+                  )}>
+                    <Clock className="h-5 w-5" />
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {isPast(new Date(complaintDetail.expectedResolutionDate)) ? "SLA Deadline Breached" : "Expected Resolution"}
+                      </p>
+                      <p className="text-xs opacity-90">
+                        {isPast(new Date(complaintDetail.expectedResolutionDate))
+                          ? `Overdue by ${formatDistanceToNow(new Date(complaintDetail.expectedResolutionDate))}`
+                          : `Target: ${format(new Date(complaintDetail.expectedResolutionDate), "PPp")} (${formatDistanceToNow(new Date(complaintDetail.expectedResolutionDate), { addSuffix: true })})`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <span className="text-sm font-semibold mb-2 block">Description</span>
                   <p className="text-sm bg-muted/50 p-4 rounded-xl border border-muted/50 leading-relaxed text-muted-foreground">{complaintDetail.description}</p>
@@ -694,12 +720,20 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
 
                 {complaintDetail.photoUrl && (
                   <div>
-                    <span className="text-sm font-semibold mb-2 block">Attached Evidence Image (Click to Expand)</span>
+                    <span className="text-sm font-semibold mb-2 block flex items-center gap-2">
+                      Attached Evidence
+                      <Badge variant="secondary" className="text-[10px] font-normal cursor-pointer" onClick={() => { setViewerImage(complaintDetail.photoUrl!); setViewerOpen(true); }}>
+                        <Maximize2 className="h-3 w-3 mr-1" /> View Full Image
+                      </Badge>
+                    </span>
                     <div
-                      className="rounded-xl overflow-hidden border border-muted/50 bg-black/5 cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => window.open(complaintDetail.photoUrl!, "_blank")}
+                      className="rounded-xl overflow-hidden border border-muted/50 bg-black/5 cursor-pointer hover:opacity-90 transition-opacity relative group"
+                      onClick={() => { setViewerImage(complaintDetail.photoUrl!); setViewerOpen(true); }}
                     >
-                      <img src={complaintDetail.photoUrl} alt="Complaint Evidence" className="w-full max-h-[400px] object-cover" />
+                      <img src={complaintDetail.photoUrl} alt="Complaint Evidence" className="w-full max-h-[300px] object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Maximize2 className="h-8 w-8 text-white" />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -881,6 +915,19 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
             </>
           ) : (
             <div className="p-8 text-center text-muted-foreground">Complaint not found or you lack permissions.</div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Fullscreen Image Viewer Modal */}
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-1 bg-black border-none [&>button]:text-white">
+          <DialogTitle className="sr-only">Image Viewer</DialogTitle>
+          <DialogDescription className="sr-only">Full resolution view of the uploaded evidence.</DialogDescription>
+          {viewerImage && (
+            <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-md">
+              <img src={viewerImage} alt="Full Resolution Evidence" className="max-w-full max-h-[85vh] object-contain" />
+            </div>
           )}
         </DialogContent>
       </Dialog>

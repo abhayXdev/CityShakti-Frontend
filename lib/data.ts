@@ -17,6 +17,7 @@ export type Complaint = {
   upvotes: number
   impactScore: number
   isSlaBreached?: boolean
+  expectedResolutionDate?: string | null
   createdAt: string
   updatedAt: string
 }
