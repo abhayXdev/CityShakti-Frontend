@@ -79,6 +79,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
             getWardComplaintsApi(savedToken, ward)
               .then(setWardComplaints)
               .catch(console.error)
+
+            // Fetch User's previously upvoted complaint IDs from backend
+            // This is done here as well as in login to cover session restoration
+            fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/complaints/user/upvotes`, {
+              headers: { Authorization: `Bearer ${savedToken}` }
+            })
+              .then(res => res.ok ? res.json() : Promise.reject(res))
+              .then(votedIds => setUpvotedIds(new Set(votedIds.map(String))))
+              .catch(e => console.error("Failed to load upvoted IDs on restore", e));
           }
 
           if (profile.role === "officer") {
@@ -169,6 +178,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const userWard = (profile as any)?.ward || (liveComplaints.length > 0 ? liveComplaints[0].location.area : "Ward 4")
             const wComplaints = await getWardComplaintsApi(token, userWard)
             setWardComplaints(wComplaints)
+
+            // Fetch User's previously upvoted complaint IDs from backend
+            try {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/complaints/user/upvotes`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              if (res.ok) {
+                const votedIds = await res.json();
+                setUpvotedIds(new Set(votedIds.map(String)));
+              }
+            } catch (e) {
+              console.error("Failed to load user upvotes on login", e);
+            }
           } catch (err) {
             console.error("Failed to load community complaints", err)
           }
@@ -198,6 +220,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComplaints([])
     setWardComplaints([])
     setOutOfBoundComplaints([])
+    setUpvotedIds(new Set())
     setActiveView("dashboard")
   }, [])
 
