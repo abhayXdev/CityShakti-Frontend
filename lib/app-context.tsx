@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 import type { Complaint, Notification } from "@/lib/data"
 
-import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi } from "@/lib/api"
+import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi, closeComplaintApi } from "@/lib/api"
 
 type AuthUser = {
   role: "citizen" | "officer" | "sudo"
@@ -20,8 +20,10 @@ type AppContextType = {
   logout: () => void
   complaints: Complaint[]
   wardComplaints: Complaint[]
+  outOfBoundComplaints: Complaint[]
   notifications: Notification[]
   updateComplaintStatus: (id: string, status: Complaint["status"]) => void
+  closeComplaint: (id: string) => Promise<void>
   createComplaint: (payload: { title: string; description: string; ward: string; category: string; latitude?: number; longitude?: number; photo_url?: string }) => Promise<void>
   upvoteComplaint: (id: string) => Promise<boolean>
   adminAssignComplaint: (id: string, assignedTo: string, department: string) => Promise<void>
@@ -47,6 +49,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser>(null)
   const [complaints, setComplaints] = useState<Complaint[]>([])
   const [wardComplaints, setWardComplaints] = useState<Complaint[]>([])
+  const [outOfBoundComplaints, setOutOfBoundComplaints] = useState<Complaint[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [activeView, setActiveView] = useState("dashboard")
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set())
@@ -75,6 +78,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const ward = profile.ward || "Ward 4"
             getWardComplaintsApi(savedToken, ward)
               .then(setWardComplaints)
+              .catch(console.error)
+          }
+
+          if (profile.role === "officer") {
+            getComplaintsApi(savedToken, true)
+              .then(setOutOfBoundComplaints)
               .catch(console.error)
           }
         })
@@ -165,6 +174,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        if ((profile?.role || role) === "officer") {
+          try {
+            const oobComplaints = await getComplaintsApi(token, true)
+            setOutOfBoundComplaints(oobComplaints)
+          } catch (err) {
+            console.error("Failed to load out of bound complaints", err)
+          }
+        }
+
         return true
       } catch (err: any) {
         console.error("Login failed", err)
@@ -179,6 +197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setComplaints([])
     setWardComplaints([])
+    setOutOfBoundComplaints([])
     setActiveView("dashboard")
   }, [])
 
@@ -197,6 +216,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await updateComplaintStatusApi(user.token, id, status)
       } catch (err) {
         console.error("Failed to update status on server", err)
+      }
+    },
+    [user]
+  )
+
+  const closeComplaint = useCallback(
+    async (id: string) => {
+      // Optimistic update
+      setComplaints((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: "closed", updatedAt: new Date().toISOString() } : c
+        )
+      )
+
+      if (!user?.token) return
+
+      try {
+        await closeComplaintApi(user.token, id)
+      } catch (err) {
+        console.error("Failed to close complaint on server", err)
       }
     },
     [user]
@@ -288,8 +327,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         logout,
         complaints,
         wardComplaints,
+        outOfBoundComplaints,
         notifications,
         updateComplaintStatus,
+        closeComplaint,
         createComplaint,
         upvoteComplaint,
         adminAssignComplaint,

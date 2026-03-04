@@ -54,3 +54,24 @@ export async function fetchPincodeInfo(pincode: string): Promise<PincodeInfo | n
 export function formatPincodeArea(info: PincodeInfo): string {
     return `${info.postOffice}, ${info.district}, ${info.state}`
 }
+
+/**
+ * Reverse geocodes coordinates to find the Indian PIN code using OpenStreetMap Nominatim
+ */
+export async function fetchPincodeFromCoordinates(lat: number, lon: number): Promise<string | null> {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+        if (!res.ok) return null
+
+        const data = await res.json()
+        const postcode = data?.address?.postcode
+
+        // Validate it's a 6 digit Indian PIN
+        if (postcode && /^\d{6}$/.test(postcode)) {
+            return postcode
+        }
+        return null
+    } catch {
+        return null
+    }
+}

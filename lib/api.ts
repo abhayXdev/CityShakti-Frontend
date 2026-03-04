@@ -111,8 +111,12 @@ export async function registerApi(payload: {
     return res.json()
 }
 
-export async function getComplaintsApi(token: string): Promise<Complaint[]> {
-    const res = await fetch(`${API_BASE_URL}/complaints/?skip=0&limit=100`, {
+export async function getComplaintsApi(token: string, outOfBound: boolean = false): Promise<Complaint[]> {
+    let url = `${API_BASE_URL}/complaints/?skip=0&limit=100`
+    if (outOfBound) {
+        url += "&out_of_bound=true"
+    }
+    const res = await fetch(url, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -332,3 +336,22 @@ export async function unsuspendOfficerApi(token: string, userId: string) {
     if (!res.ok) throw new Error("Failed to unsuspend officer")
     return res.json()
 }
+
+export async function closeComplaintApi(token: string, complaintId: string): Promise<Complaint> {
+    const res = await fetch(`${API_BASE_URL}/complaints/${complaintId}/close`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+    })
+
+    if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || "Failed to close complaint")
+    }
+
+    const data = await res.json()
+    return transformComplaint(data)
+}
+

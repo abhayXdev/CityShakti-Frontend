@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useApp } from "@/lib/app-context"
 import { getStats, type ComplaintDetail, type Complaint } from "@/lib/data"
 import { getComplaintDetailApi, getPendingOfficersApi, approveOfficerApi, rejectOfficerApi, deleteOfficerApi, getAdminDirectoryApi, suspendOfficerApi, unsuspendOfficerApi } from "@/lib/api"
+import { fetchPincodeFromCoordinates } from "@/lib/pincode"
 import {
   ClipboardList,
   CheckCircle2,
@@ -45,6 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   AreaChart,
   Area,
@@ -92,7 +94,7 @@ const statusColors = {
 }
 
 export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?: boolean }) {
-  const { user, complaints, wardComplaints, createComplaint, updateComplaintStatus, addProgressUpdate, upvoteComplaint, upvotedIds } = useApp()
+  const { user, complaints, wardComplaints, outOfBoundComplaints, createComplaint, updateComplaintStatus, closeComplaint, addProgressUpdate, upvoteComplaint, upvotedIds } = useApp()
   const stats = getStats(complaints)
 
   const isCitizen = user?.role === "citizen"
@@ -113,6 +115,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
     latitude: "" as string | number,
     longitude: "" as string | number,
     photo_url: "",
+    incident_ward: "",
   })
 
   // Complaint Detail State
@@ -138,11 +141,21 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
+          const lat = Number(position.coords.latitude.toFixed(6))
+          const lon = Number(position.coords.longitude.toFixed(6))
+
+          let incidentWard = ""
+          try {
+            const pin = await fetchPincodeFromCoordinates(lat, lon)
+            if (pin) incidentWard = pin
+          } catch (e) { console.error(e) }
+
           setFormData(prev => ({
             ...prev,
-            latitude: Number(position.coords.latitude.toFixed(6)),
-            longitude: Number(position.coords.longitude.toFixed(6))
+            latitude: lat,
+            longitude: lon,
+            incident_ward: incidentWard
           }))
         },
         (error) => {
@@ -195,11 +208,12 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       }
       if (formData.latitude !== "") payload.latitude = Number(formData.latitude)
       if (formData.longitude !== "") payload.longitude = Number(formData.longitude)
+      if (formData.incident_ward !== "") payload.incident_ward = formData.incident_ward
       if (finalPhotoUrl.trim() !== "") payload.photo_url = finalPhotoUrl.trim()
 
       await createComplaint(payload)
       setIsDialogOpen(false)
-      setFormData({ title: "", category: "", description: "", latitude: "", longitude: "", photo_url: "" })
+      setFormData({ title: "", category: "", description: "", latitude: "", longitude: "", photo_url: "", incident_ward: "" })
       setSelectedFile(null)
     } catch (error) {
       console.error("Failed to submit complaint:", error)
@@ -561,13 +575,36 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
         <CardHeader className="pb-3 border-b">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold">
-              {isCitizen ? "My Complaint History" : "Recent Global Complaints"}
+              {isCitizen ? "My Complaint History" : "Jurisdiction Tasks"}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            {renderComplaintTable(recentComplaints)}
+            {!isCitizen ? (
+              <Tabs defaultValue="actionable" className="w-full">
+                <div className="p-4 pb-0 border-b border-primary/5">
+                  <TabsList className="bg-muted/50 w-full sm:w-auto overflow-x-auto whitespace-nowrap justify-start sm:justify-center">
+                    <TabsTrigger value="actionable" className="flex gap-2">
+                      <MapPin className="h-3 w-3" />
+                      Actionable Issues (Inside Incident Zone)
+                    </TabsTrigger>
+                    <TabsTrigger value="outofbound" className="flex gap-2">
+                      <AlertCircle className="h-3 w-3" />
+                      Out-of-Bound (ReadOnly Watchlist)
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="actionable" className="m-0 select-none">
+                  {renderComplaintTable(recentComplaints)}
+                </TabsContent>
+                <TabsContent value="outofbound" className="m-0 select-none">
+                  {renderComplaintTable(outOfBoundComplaints)}
+                </TabsContent>
+              </Tabs>
+            ) : (
+              renderComplaintTable(recentComplaints)
+            )}
           </div>
         </CardContent>
       </Card>
@@ -715,6 +752,30 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                       className="gap-1"
                     >
                       <ChevronUp className="h-4 w-4" /> +1 Upvote
+                    </Button>
+                  </div>
+                )}
+
+                {/* Verification Button for Citizen View */}
+                {isCitizen && complaintDetail.status === "resolved" && (
+                  <div className="pt-5 border-t mt-4 flex flex-col gap-2 bg-success/5 p-4 rounded-xl border border-success/20">
+                    <span className="text-sm font-semibold flex items-center gap-2 text-success">
+                      <CheckCircle2 className="h-4 w-4" /> Verify Issue Resolution
+                    </span>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Please verify the physical work performed. Mark this as complete ONLY if you are satisfied with the government's response.
+                    </p>
+                    <Button
+                      onClick={async () => {
+                        await closeComplaint(complaintDetail.id);
+                        setComplaintDetail({
+                          ...complaintDetail,
+                          status: "closed"
+                        });
+                      }}
+                      className="w-full sm:w-auto bg-success hover:bg-success/90 text-white gap-2 shadow-sm"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> Verify & Close Ticket
                     </Button>
                   </div>
                 )}

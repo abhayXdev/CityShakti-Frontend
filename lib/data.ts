@@ -7,7 +7,7 @@ export type Complaint = {
   category: string
   department: string
   priority: "high" | "medium" | "low"
-  status: "pending" | "in-progress" | "resolved" | "escalated"
+  status: "pending" | "in-progress" | "resolved" | "escalated" | "closed"
   location: { lat: number; lng: number; area: string }
   assignedOfficer?: string | null
   citizenName: string
