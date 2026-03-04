@@ -15,6 +15,7 @@ import {
   ChevronUp,
   AlertCircle,
   Plus,
+  XCircle,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -91,10 +92,11 @@ const statusColors = {
   "in-progress": "bg-chart-1/10 text-chart-1",
   resolved: "bg-success/10 text-success",
   escalated: "bg-destructive/10 text-destructive",
+  closed: "bg-success/20 text-success font-semibold border-success/30",
 }
 
 export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?: boolean }) {
-  const { user, complaints, wardComplaints, outOfBoundComplaints, createComplaint, updateComplaintStatus, closeComplaint, addProgressUpdate, upvoteComplaint, upvotedIds } = useApp()
+  const { user, complaints, wardComplaints, outOfBoundComplaints, createComplaint, updateComplaintStatus, closeComplaint, reEscalateComplaint, addProgressUpdate, upvoteComplaint, upvotedIds } = useApp()
   const stats = getStats(complaints)
 
   const isCitizen = user?.role === "citizen"
@@ -786,11 +788,28 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                     >
                       <CheckCircle2 className="h-4 w-4" /> Verify & Close Ticket
                     </Button>
+                    <Button
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to REJECT this resolution? This will penalize the department and escalate the priority.")) {
+                          try {
+                            await reEscalateComplaint(complaintDetail.id);
+                            setComplaintDetail({
+                              ...complaintDetail,
+                              status: "in-progress"
+                            });
+                          } catch (e: any) { alert(e.message) }
+                        }
+                      }}
+                      variant="destructive"
+                      className="w-full sm:w-auto mt-2 gap-2 shadow-sm"
+                    >
+                      <XCircle className="h-4 w-4" /> Reject Resolution & Re-escalate
+                    </Button>
                   </div>
                 )}
 
                 {/* Status Update Controls (Admin Only) */}
-                {!isCitizen && (
+                {!isCitizen && complaintDetail.status !== "closed" && (
                   <div className="border-t pt-5 mt-2 bg-muted/20 -mx-6 -mb-6 p-6">
                     <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-chart-4" />
@@ -838,6 +857,19 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                   </div>
                 )}
 
+                {/* Locked Controls State for Admin */}
+                {!isCitizen && complaintDetail.status === "closed" && (
+                  <div className="border-t pt-5 mt-4 p-4 bg-success/10 border border-success/20 rounded-xl">
+                    <p className="text-sm font-semibold text-success flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Ticket Closed by Citizen
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This complaint was verified and permanently closed by the reporting citizen. Administrative actions are locked.
+                    </p>
+                  </div>
+                )}
+
               </div>
             </>
           ) : (
@@ -879,7 +911,9 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 <p className="font-medium truncate flex items-center gap-1">
                   {complaint.title}
                   {isCitizen && user?.ward && complaint.location.area && user.ward !== complaint.location.area && (
-                    <AlertCircle className="h-3 w-3 text-amber-500 shrink-0" title={`Out of Bound: Routed to ${complaint.location.area}`} />
+                    <span title={`Out of Bound: Routed to ${complaint.location.area}`}>
+                      <AlertCircle className="h-3 w-3 text-amber-500 shrink-0" />
+                    </span>
                   )}
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate">{complaint.location.area}</p>

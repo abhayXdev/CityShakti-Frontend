@@ -233,6 +233,18 @@ export async function upvoteComplaintApi(token: string, id: string) {
     return res.json()
 }
 
+export async function reEscalateComplaintApi(token: string, id: string) {
+    const res = await fetch(`${API_BASE_URL}/complaints/${id}/re_escalate`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || "Failed to re-escalate complaint")
+    }
+    return transformComplaint(await res.json())
+}
+
 export async function adminUpdateComplaintApi(token: string, id: string, payload: any) {
     const res = await fetch(`${API_BASE_URL}/complaints/${id}`, {
         method: "PATCH",
@@ -354,4 +366,3 @@ export async function closeComplaintApi(token: string, complaintId: string): Pro
     const data = await res.json()
     return transformComplaint(data)
 }
-

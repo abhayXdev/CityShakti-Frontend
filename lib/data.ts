@@ -130,7 +130,7 @@ export function getStats(complaintsList: Complaint[] = complaints) {
   const inProgress = complaintsList.filter(
     (c) => c.status === "in-progress"
   ).length
-  const escalated = complaintsList.filter((c) => c.status === "escalated").length
+  const escalated = complaintsList.filter((c) => c.status === "escalated" || (c as any).is_sla_breached).length
   const highPriority = complaintsList.filter(
     (c) => c.priority === "high"
   ).length

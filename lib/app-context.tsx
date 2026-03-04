@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 import type { Complaint, Notification } from "@/lib/data"
 
-import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi, closeComplaintApi } from "@/lib/api"
+import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi, closeComplaintApi, reEscalateComplaintApi } from "@/lib/api"
 
 type AuthUser = {
   role: "citizen" | "officer" | "sudo"
@@ -24,6 +24,7 @@ type AppContextType = {
   notifications: Notification[]
   updateComplaintStatus: (id: string, status: Complaint["status"]) => void
   closeComplaint: (id: string) => Promise<void>
+  reEscalateComplaint: (id: string) => Promise<void>
   createComplaint: (payload: { title: string; description: string; ward: string; category: string; latitude?: number; longitude?: number; photo_url?: string }) => Promise<void>
   upvoteComplaint: (id: string) => Promise<boolean>
   adminAssignComplaint: (id: string, assignedTo: string, department: string) => Promise<void>
@@ -264,6 +265,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [user]
   )
 
+  const reEscalateComplaint = useCallback(
+    async (id: string) => {
+      // Optimistic update
+      setComplaints((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: "in-progress", updatedAt: new Date().toISOString() } : c
+        )
+      )
+
+      if (!user?.token) return
+
+      try {
+        await reEscalateComplaintApi(user.token, id)
+      } catch (err) {
+        console.error("Failed to re-escalate complaint on server", err)
+        throw err
+      }
+    },
+    [user]
+  )
+
   const createComplaint = useCallback(
     async (payload: { title: string; description: string; ward: string; category: string; latitude?: number; longitude?: number; photo_url?: string }) => {
       if (!user?.token) throw new Error("Not logged in")
@@ -354,6 +376,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notifications,
         updateComplaintStatus,
         closeComplaint,
+        reEscalateComplaint,
         createComplaint,
         upvoteComplaint,
         adminAssignComplaint,
