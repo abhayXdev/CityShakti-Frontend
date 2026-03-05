@@ -863,10 +863,12 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                       Administrator Controls
                     </h4>
                     {(() => {
-                      const normalize = (str: string | undefined | null) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-                      const isSameDept = normalize(user?.department) === normalize(complaintDetail.department) ||
-                        normalize(user?.department).includes(normalize(complaintDetail.department).replace('s', '')) ||
-                        normalize(complaintDetail.department).includes(normalize(user?.department).replace('s', ''));
+                      const isSameDept = (() => {
+                        if (!user?.department || !complaintDetail.department) return true;
+                        const userWords = user.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 3);
+                        const compWords = complaintDetail.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 3);
+                        return userWords.some(uw => compWords.some(cw => uw.includes(cw) || cw.includes(uw)));
+                      })();
 
                       if (isSameDept) {
                         return (
