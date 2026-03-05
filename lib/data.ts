@@ -127,7 +127,7 @@ export const complaints = [] as Complaint[]
 
 export function getStats(complaintsList: Complaint[] = complaints) {
   const total = complaintsList.length
-  const resolved = complaintsList.filter((c) => c.status === "resolved").length
+  const resolved = complaintsList.filter((c) => c.status === "resolved" || c.status === "closed").length
   const pending = complaintsList.filter((c) => c.status === "pending").length
   const inProgress = complaintsList.filter(
     (c) => c.status === "in-progress"
@@ -154,7 +154,7 @@ export function getPriorityData(complaintsList: Complaint[] = complaints) {
 }
 
 export function getStatusData(complaintsList: Complaint[] = complaints) {
-  const resolved = complaintsList.filter((c) => c.status === "resolved").length
+  const resolved = complaintsList.filter((c) => c.status === "resolved" || c.status === "closed").length
   const pending = complaintsList.filter((c) => c.status === "pending").length
   const inProgress = complaintsList.filter(
     (c) => c.status === "in-progress"

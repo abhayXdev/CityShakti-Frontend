@@ -300,7 +300,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
       if (data[dateStr]) {
         data[dateStr].complaints += 1
-        if (c.status === "resolved") data[dateStr].resolved += 1
+        if (c.status === "resolved" || c.status === "closed") data[dateStr].resolved += 1
       }
     })
 
@@ -511,7 +511,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 <Card className="shadow-sm">
                   <CardContent className="p-5 flex flex-col gap-1">
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Resolved</span>
-                    <span className="text-3xl font-bold text-success">{complaints.filter(c => c.status === 'resolved').length}</span>
+                    <span className="text-3xl font-bold text-success">{complaints.filter(c => c.status === 'resolved' || c.status === 'closed').length}</span>
                   </CardContent>
                 </Card>
               </div>
@@ -634,8 +634,8 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 <div className="flex items-start justify-between pe-6">
                   <div>
                     <DialogTitle className="text-xl leading-tight pr-4 flex items-center flex-wrap gap-2">
-                      {complaintDetail.title}
-                      {isCitizen && user?.ward && complaintDetail.location.area && user.ward !== complaintDetail.location.area && (
+                      {complaintDetail?.title}
+                      {isCitizen && user?.ward && complaintDetail?.location?.area && user.ward !== complaintDetail.location.area && (
                         <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-500 border-amber-500/20">
                           Out Of Bound (Routed to {complaintDetail.location.area})
                         </Badge>
@@ -690,8 +690,8 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                             }
                           }}
                         >
-                          {complaintDetail.authorId === user?.id ? "Your Report" :
-                            upvotedIds.has(complaintDetail.id) ? "Upvoted" : "+1 Upvote"}
+                          {complaintDetail?.authorId === user?.id ? "Your Report" :
+                            (complaintDetail?.id && upvotedIds.has(complaintDetail.id)) ? "Upvoted" : "+1 Upvote"}
                         </Button>
                       )}
                     </p>
@@ -867,7 +867,6 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         const ud = user?.department;
                         const cd = complaintDetail?.department;
                         if (!ud || !cd) return true;
-                        if (user?.role === 'sudo') return true;
                         const uWords = ud.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
                         const cWords = cd.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
                         const match = uWords.some(uw => cWords.some(cw => uw.includes(cw) || cw.includes(uw)));
@@ -879,14 +878,16 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         return (
                           <>
                             <div className="flex gap-2 mb-4">
-                              <Button size="sm" variant={complaintDetail.status === 'in-progress' ? "default" : "outline"} onClick={async () => {
+                              <Button size="sm" variant={complaintDetail?.status === 'in-progress' ? "default" : "outline"} onClick={async () => {
                                 try {
+                                  if (!complaintDetail?.id) return;
                                   await updateComplaintStatus(complaintDetail.id, "in-progress")
                                   setComplaintDetail({ ...complaintDetail, status: "in-progress" })
                                 } catch (e: any) { alert(e.message || "Failed to update status") }
                               }}>Mark In-Progress</Button>
-                              <Button size="sm" variant={complaintDetail.status === 'resolved' ? "default" : "outline"} className={complaintDetail.status === 'resolved' ? "bg-success hover:bg-success/90" : ""} onClick={async () => {
+                              <Button size="sm" variant={complaintDetail?.status === 'resolved' ? "default" : "outline"} className={complaintDetail?.status === 'resolved' ? "bg-success hover:bg-success/90" : ""} onClick={async () => {
                                 try {
+                                  if (!complaintDetail?.id) return;
                                   await updateComplaintStatus(complaintDetail.id, "resolved")
                                   setComplaintDetail({ ...complaintDetail, status: "resolved" })
                                 } catch (e: any) { alert(e.message || "Failed to resolve") }
@@ -931,10 +932,13 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                                   }
                                   setUploadingUpdateImage(false)
                                 }
+                                if (!complaintDetail?.id) return;
                                 await addProgressUpdate(complaintDetail.id, { phase: progressPhase, note: progressNote, photo_url: finalPhotoUrl })
                                 setProgressNote("")
                                 setUpdateFile(null)
-                                getComplaintDetailApi(user.token, selectedComplaintId!).then(data => setComplaintDetail(data))
+                                if (user?.token && selectedComplaintId) {
+                                  getComplaintDetailApi(user.token, selectedComplaintId).then(data => setComplaintDetail(data))
+                                }
                               }}>
                                 {uploadingUpdateImage ? "Uploading..." : "Post Official Update"}
                               </Button>
