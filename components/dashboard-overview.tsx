@@ -864,12 +864,14 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                     </h4>
                     {(() => {
                       const isSameDept = (() => {
-                        if (!user?.department || !complaintDetail.department) return true;
-                        if (user.role === 'sudo') return true;
-                        const uWords = user.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
-                        const cWords = complaintDetail.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
+                        const ud = user?.department;
+                        const cd = complaintDetail?.department;
+                        if (!ud || !cd) return true;
+                        if (user?.role === 'sudo') return true;
+                        const uWords = ud.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
+                        const cWords = cd.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
                         const match = uWords.some(uw => cWords.some(cw => uw.includes(cw) || cw.includes(uw)));
-                        console.log(`[DeptMatching] User: ${user.department}, Target: ${complaintDetail.department}, Match: ${match}`);
+                        console.log(`[DeptMatching] User: ${ud}, Target: ${cd}, Match: ${match}`);
                         return match;
                       })();
 
