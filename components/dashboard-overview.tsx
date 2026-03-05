@@ -865,9 +865,12 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                     {(() => {
                       const isSameDept = (() => {
                         if (!user?.department || !complaintDetail.department) return true;
-                        const userWords = user.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 3);
-                        const compWords = complaintDetail.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 3);
-                        return userWords.some(uw => compWords.some(cw => uw.includes(cw) || cw.includes(uw)));
+                        if (user.role === 'sudo') return true;
+                        const uWords = user.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
+                        const cWords = complaintDetail.department.toLowerCase().split(/[^a-z0-9]/).filter(w => w.length >= 2);
+                        const match = uWords.some(uw => cWords.some(cw => uw.includes(cw) || cw.includes(uw)));
+                        console.log(`[DeptMatching] User: ${user.department}, Target: ${complaintDetail.department}, Match: ${match}`);
+                        return match;
                       })();
 
                       if (isSameDept) {
