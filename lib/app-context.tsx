@@ -240,6 +240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await updateComplaintStatusApi(user.token, id, status)
       } catch (err) {
         console.error("Failed to update status on server", err)
+        throw err
       }
     },
     [user]
@@ -260,6 +261,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await closeComplaintApi(user.token, id)
       } catch (err) {
         console.error("Failed to close complaint on server", err)
+        throw err
       }
     },
     [user]

@@ -132,6 +132,8 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
 
   const [progressPhase, setProgressPhase] = useState("update")
   const [progressNote, setProgressNote] = useState("")
+  const [updateFile, setUpdateFile] = useState<File | null>(null)
+  const [uploadingUpdateImage, setUploadingUpdateImage] = useState(false)
 
   useEffect(() => {
     if (selectedComplaintId && user?.token) {
@@ -867,19 +869,23 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                           <>
                             <div className="flex gap-2 mb-4">
                               <Button size="sm" variant={complaintDetail.status === 'in-progress' ? "default" : "outline"} onClick={async () => {
-                                await updateComplaintStatus(complaintDetail.id, "in-progress")
-                                setComplaintDetail({ ...complaintDetail, status: "in-progress" })
+                                try {
+                                  await updateComplaintStatus(complaintDetail.id, "in-progress")
+                                  setComplaintDetail({ ...complaintDetail, status: "in-progress" })
+                                } catch (e: any) { alert(e.message || "Failed to update status") }
                               }}>Mark In-Progress</Button>
                               <Button size="sm" variant={complaintDetail.status === 'resolved' ? "default" : "outline"} className={complaintDetail.status === 'resolved' ? "bg-success hover:bg-success/90" : ""} onClick={async () => {
-                                await updateComplaintStatus(complaintDetail.id, "resolved")
-                                setComplaintDetail({ ...complaintDetail, status: "resolved" })
+                                try {
+                                  await updateComplaintStatus(complaintDetail.id, "resolved")
+                                  setComplaintDetail({ ...complaintDetail, status: "resolved" })
+                                } catch (e: any) { alert(e.message || "Failed to resolve") }
                               }}>Mark Resolved</Button>
                             </div>
                             <div className="grid gap-3 border border-primary/10 p-4 rounded-xl bg-background shadow-sm">
                               <Label className="text-xs font-semibold">Publish Public Progress Update</Label>
                               <div className="flex flex-col sm:flex-row gap-2">
                                 <Select value={progressPhase} onValueChange={setProgressPhase}>
-                                  <SelectTrigger className="w-full sm:w-[140px] text-xs h-9"><SelectValue /></SelectTrigger>
+                                  <SelectTrigger className="w-full sm:w-[130px] text-xs h-9"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="update">General Update</SelectItem>
                                     <SelectItem value="before">Before Work</SelectItem>
@@ -887,13 +893,40 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                                   </SelectContent>
                                 </Select>
                                 <Input className="h-9 text-xs" placeholder="Official note for citizens..." value={progressNote} onChange={e => setProgressNote(e.target.value)} />
+                                <Input type="file" accept="image/*" onChange={(e) => {
+                                  if (e.target.files && e.target.files.length > 0) {
+                                    setUpdateFile(e.target.files[0])
+                                  }
+                                }} className="h-9 text-xs w-full sm:w-[220px]" />
                               </div>
-                              <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end" onClick={async () => {
+                              <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end" disabled={uploadingUpdateImage} onClick={async () => {
                                 if (!user?.token) return;
-                                await addProgressUpdate(complaintDetail.id, { phase: progressPhase, note: progressNote })
+                                let finalPhotoUrl = ""
+                                if (updateFile) {
+                                  setUploadingUpdateImage(true)
+                                  try {
+                                    const imgData = new FormData()
+                                    imgData.append("image", updateFile)
+                                    const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=67f6b0f0a516e87fbf38eb04a080d859", {
+                                      method: "POST",
+                                      body: imgData
+                                    })
+                                    if (uploadRes.ok) {
+                                      const json = await uploadRes.json()
+                                      finalPhotoUrl = json.data.url
+                                    }
+                                  } catch (e) {
+                                    console.error("Image upload failed", e)
+                                  }
+                                  setUploadingUpdateImage(false)
+                                }
+                                await addProgressUpdate(complaintDetail.id, { phase: progressPhase, note: progressNote, photo_url: finalPhotoUrl })
                                 setProgressNote("")
+                                setUpdateFile(null)
                                 getComplaintDetailApi(user.token, selectedComplaintId!).then(data => setComplaintDetail(data))
-                              }}>Post Official Update</Button>
+                              }}>
+                                {uploadingUpdateImage ? "Uploading..." : "Post Official Update"}
+                              </Button>
                             </div>
                           </>
                         );
