@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 import type { Complaint, Notification } from "@/lib/data"
 
-import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi, closeComplaintApi, reEscalateComplaintApi } from "@/lib/api"
+import { loginApi, getComplaintsApi, getWardComplaintsApi, updateComplaintStatusApi, getMeApi, createComplaintApi, upvoteComplaintApi, adminAssignComplaintApi, addProgressUpdateApi, closeComplaintApi, reEscalateComplaintApi, getDashboardApi } from "@/lib/api"
 
 type AuthUser = {
   role: "citizen" | "officer" | "sudo"
@@ -36,6 +36,16 @@ type AppContextType = {
   token: string | null
   upvotedIds: Set<string>
   isRestoring: boolean
+  dashboardStats: {
+    total: number;
+    pending: number;
+    inProgress: number;
+    resolved: number;
+    highPriority: number;
+    escalated: number;
+    wardStats?: any[];
+    categoryStats?: any[];
+  } | null
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -55,6 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeView, setActiveView] = useState("dashboard")
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set())
   const [isRestoring, setIsRestoring] = useState(true)
+  const [dashboardStats, setDashboardStats] = useState<AppContextType['dashboardStats']>(null)
 
   // Session persistence on mount
   useEffect(() => {
@@ -91,10 +102,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
               .catch(e => console.error("Failed to load upvoted IDs on restore", e));
           }
 
-          if (profile.role === "officer") {
+          if (profile.role === "officer" || profile.role === "sudo") {
             getComplaintsApi(savedToken, true)
               .then(setOutOfBoundComplaints)
               .catch(console.error)
+
+            getDashboardApi(savedToken).then(setDashboardStats).catch(console.error)
           }
         })
         .catch((err) => {
@@ -201,9 +214,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
           try {
             const oobComplaints = await getComplaintsApi(token, true)
             setOutOfBoundComplaints(oobComplaints)
+            getDashboardApi(token).then(setDashboardStats).catch(console.error)
           } catch (err) {
             console.error("Failed to load out of bound complaints", err)
           }
+        }
+
+        if (profile?.role === "sudo") {
+          getDashboardApi(token).then(setDashboardStats).catch(console.error)
         }
 
         return true
@@ -390,6 +408,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         token: user?.token || null,
         upvotedIds,
         isRestoring,
+        dashboardStats,
       }}
     >
       {children}

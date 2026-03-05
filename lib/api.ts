@@ -266,7 +266,17 @@ export async function getDashboardApi(token: string) {
         headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) throw new Error("Failed to fetch dashboard summary")
-    return res.json()
+    const data = await res.json()
+    return {
+        total: data.total_complaints,
+        pending: data.pending_complaints,
+        inProgress: data.in_progress_complaints,
+        resolved: data.resolved_complaints,
+        highPriority: data.high_priority_complaints,
+        escalated: data.escalated_complaints,
+        wardStats: data.ward_stats,
+        categoryStats: data.category_stats,
+    }
 }
 
 export async function getComplaintDetailApi(token: string, id: string): Promise<ComplaintDetail> {

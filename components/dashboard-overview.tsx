@@ -97,8 +97,12 @@ const statusColors = {
 }
 
 export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?: boolean }) {
-  const { user, complaints, wardComplaints, outOfBoundComplaints, createComplaint, updateComplaintStatus, closeComplaint, reEscalateComplaint, addProgressUpdate, upvoteComplaint, upvotedIds } = useApp()
-  const stats = getStats(complaints)
+  const { user, complaints, wardComplaints, outOfBoundComplaints, createComplaint, updateComplaintStatus, closeComplaint, reEscalateComplaint, addProgressUpdate, upvoteComplaint, upvotedIds, dashboardStats } = useApp()
+
+  // Use backend stats for officers/sudo if available, otherwise fallback to local calculation
+  const stats = (user?.role === "officer" || user?.role === "sudo") && dashboardStats
+    ? dashboardStats
+    : getStats(complaints)
 
   const isCitizen = user?.role === "citizen"
 
