@@ -60,7 +60,11 @@ export function formatPincodeArea(info: PincodeInfo): string {
  */
 export async function fetchPincodeFromCoordinates(lat: number, lon: number): Promise<string | null> {
     try {
-        const apiKey = "dNvAoXqSNMEy4eLhtdapwBC6vGucSOcl0BFR73kQ"
+        const apiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
+        if (!apiKey) {
+            console.error("Ola Maps API Key is missing in environment variables.")
+            return null
+        }
         const res = await fetch(`https://api.olamaps.io/places/v1/reverse-geocode?latlng=${lat},${lon}&api_key=${apiKey}`)
         if (!res.ok) return null
 

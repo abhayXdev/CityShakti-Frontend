@@ -20,9 +20,15 @@ export function MapView() {
         if (map.current) return // initialize map only once
         if (!mapContainer.current) return
 
+        const olaApiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
+        if (!olaApiKey) {
+            console.error("Ola Maps API Key is missing in environment variables.")
+            return
+        }
+
         map.current = new maplibregl.Map({
             container: mapContainer.current,
-            style: "https://api.olamaps.io/routing/v1/mapStyles/olamaps-standard/style.json?api_key=dNvAoXqSNMEy4eLhtdapwBC6vGucSOcl0BFR73kQ",
+            style: `https://api.olamaps.io/routing/v1/mapStyles/olamaps-standard/style.json?api_key=${olaApiKey}`,
             center: [77.2090, 28.6139], // Default to Delhi
             zoom: 12,
             attributionControl: false
