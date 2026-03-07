@@ -65,17 +65,17 @@ export function MapView() {
                     el.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-white shadow-md ${bgColor}"></div>`
 
                     const popupContent = `
-            <div class="p-2 min-w-[200px] font-sans">
+            <div class="p-2 min-w-[200px] font-sans text-foreground">
               <h4 class="font-bold text-sm mb-1">${complaint.title}</h4>
               <div class="flex items-center gap-2 mb-2">
-                <span class="text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold ${isResolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${complaint.status}</span>
-                <span class="text-[10px] text-slate-500 uppercase tracking-wider">${complaint.category}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold ${isResolved ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}">${complaint.status}</span>
+                <span class="text-[10px] text-muted-foreground uppercase tracking-wider">${complaint.category}</span>
               </div>
-              <p class="text-xs text-slate-600 line-clamp-2">${complaint.description}</p>
+              <p class="text-xs text-muted-foreground line-clamp-2">${complaint.description}</p>
             </div>
           `
 
-                    new maplibregl.Marker(el)
+                    new maplibregl.Marker({ element: el })
                         .setLngLat(lngLat)
                         .setPopup(new maplibregl.Popup({ offset: 15, closeButton: false }).setHTML(popupContent))
                         .addTo(map.current!)
@@ -83,7 +83,26 @@ export function MapView() {
             })
 
             if (hasValidCoords && map.current) {
+                // Fit to initial data
                 map.current.fitBounds(bounds, { padding: 50, maxZoom: 16 })
+
+                // Restriction Logic for Citizens/Officers
+                if (user?.role !== 'sudo') {
+                    // Calculate Elastic Bounding Box with 25% padding
+                    const sw = bounds.getSouthWest()
+                    const ne = bounds.getNorthEast()
+
+                    const latDiff = Math.abs(ne.lat - sw.lat) || 0.01 // Fallback if only 1 point
+                    const lngDiff = Math.abs(ne.lng - sw.lng) || 0.01
+
+                    const elasticBounds = new maplibregl.LngLatBounds(
+                        [sw.lng - lngDiff * 0.25, sw.lat - latDiff * 0.25],
+                        [ne.lng + lngDiff * 0.25, ne.lat + latDiff * 0.25]
+                    )
+
+                    map.current.setMaxBounds(elasticBounds)
+                    map.current.setMinZoom(10)
+                }
             }
         })
 
