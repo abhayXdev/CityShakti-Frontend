@@ -85,24 +85,6 @@ export function MapView() {
             if (hasValidCoords && map.current) {
                 // Fit to initial data
                 map.current.fitBounds(bounds, { padding: 50, maxZoom: 16 })
-
-                // Restriction Logic for Citizens/Officers
-                if (user?.role !== 'sudo') {
-                    // Calculate Elastic Bounding Box with 25% padding
-                    const sw = bounds.getSouthWest()
-                    const ne = bounds.getNorthEast()
-
-                    const latDiff = Math.abs(ne.lat - sw.lat) || 0.01 // Fallback if only 1 point
-                    const lngDiff = Math.abs(ne.lng - sw.lng) || 0.01
-
-                    const elasticBounds = new maplibregl.LngLatBounds(
-                        [sw.lng - lngDiff * 0.25, sw.lat - latDiff * 0.25],
-                        [ne.lng + lngDiff * 0.25, ne.lat + latDiff * 0.25]
-                    )
-
-                    map.current.setMaxBounds(elasticBounds)
-                    map.current.setMinZoom(10)
-                }
             }
         })
 
