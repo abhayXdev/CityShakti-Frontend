@@ -60,16 +60,30 @@ export function formatPincodeArea(info: PincodeInfo): string {
  */
 export async function fetchPincodeFromCoordinates(lat: number, lon: number): Promise<string | null> {
     try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+        const apiKey = "dNvAoXqSNMEy4eLhtdapwBC6vGucSOcl0BFR73kQ"
+        const res = await fetch(`https://api.olamaps.io/places/v1/reverse-geocode?latlng=${lat},${lon}&api_key=${apiKey}`)
         if (!res.ok) return null
 
         const data = await res.json()
-        const postcode = data?.address?.postcode
+        const results = data?.results || []
 
-        // Validate it's a 6 digit Indian PIN
-        if (postcode && /^\d{6}$/.test(postcode)) {
-            return postcode
+        for (const result of results) {
+            const components = result.address_components || []
+            const postalComponent = components.find((c: any) =>
+                c.types?.includes('postal_code') || c.types?.includes('pincode')
+            )
+            if (postalComponent && postalComponent.short_name) {
+                const pin = postalComponent.short_name
+                if (/^\d{6}$/.test(pin)) return pin
+            }
         }
+
+        // Fallback to searching the formatted address string
+        if (results.length > 0 && results[0].formatted_address) {
+            const match = results[0].formatted_address.match(/\b\d{6}\b/)
+            if (match) return match[0]
+        }
+
         return null
     } catch {
         return null

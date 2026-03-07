@@ -1225,7 +1225,7 @@ function SudoDashboard() {
                       <TableCell>{officer.department}</TableCell>
                       <TableCell>{officer.ward}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                     <div className="flex justify-end gap-2">
                           <Button size="sm" variant="outline" className="border-success/50 text-success hover:bg-success/10 w-24" onClick={() => handleApprove(String(officer.id))}>Approve</Button>
                           <Button size="sm" variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10 w-24" onClick={() => handleReject(String(officer.id))}>Reject</Button>
                         </div>

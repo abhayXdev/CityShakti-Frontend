@@ -16,6 +16,7 @@ import {
   ScrollText,
   ContactRound,
   Building2,
+  Map,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import {
@@ -44,11 +45,13 @@ import { ExportReports } from "@/components/export-reports"
 import { AIFeatures } from "@/components/ai-features"
 import { CommunityView } from "@/components/community-view"
 import { ContactUsView } from "@/components/contact-us-view"
+import { MapView } from "@/components/map-view"
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "my-complaints", label: "Dashboard", icon: LayoutDashboard },
   { id: "track-complaints", label: "Track Complaints", icon: ScrollText },
+  { id: "maps", label: "Interactive Map", icon: Map },
   { id: "community", label: "Community", icon: Users },
   { id: "contact", label: "Contact Us", icon: ContactRound },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -66,10 +69,10 @@ export function DashboardLayout() {
   // Filter useless components for citizens
   const filteredNavItems = navItems.filter((item) => {
     if (user?.role === "citizen") {
-      return ["my-complaints", "track-complaints", "community", "contact", "notifications"].includes(item.id) // Added "contact" for citizen view
+      return ["my-complaints", "track-complaints", "maps", "community", "contact", "notifications"].includes(item.id) // Added "contact" for citizen view
     } else {
       // Admin View
-      return ["dashboard", "analytics", "departments", "notifications", "export", "ai"].includes(item.id)
+      return ["dashboard", "maps", "analytics", "departments", "notifications", "export", "ai"].includes(item.id)
     }
   })
 
@@ -201,6 +204,7 @@ export function DashboardLayout() {
           {activeView === "dashboard" && <DashboardOverview />}
           {activeView === "my-complaints" && <DashboardOverview />}
           {activeView === "track-complaints" && <DashboardOverview isTrackingOnly={true} />}
+          {activeView === "maps" && <MapView />}
           {activeView === "community" && <CommunityView />}
           {activeView === "contact" && <ContactUsView />}
           {activeView === "analytics" && <AnalyticsSection />}
