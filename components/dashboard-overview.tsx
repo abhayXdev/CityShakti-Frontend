@@ -174,7 +174,8 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
         (error) => {
           console.error("Error getting location:", error)
           alert("Could not automatically fetch location. Please ensure location services are enabled or enter manually.")
-        }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       )
     } else {
       alert("Geolocation is not supported by this browser.")
