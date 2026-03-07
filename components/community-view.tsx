@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useApp } from "@/lib/app-context"
 import { type Complaint, type ComplaintDetail } from "@/lib/data"
 import { getComplaintDetailApi } from "@/lib/api"
@@ -48,11 +48,20 @@ const statusColors: Record<string, string> = {
 }
 
 export function CommunityView() {
-    const { user, wardComplaints, upvoteComplaint, upvotedIds } = useApp()
+    const { user, wardComplaints, upvoteComplaint, upvotedIds, selectedCommunityComplaintId, setSelectedCommunityComplaintId } = useApp()
     const [selectedComplaintId, setSelectedComplaintId] = useState<string | null>(null)
     const [complaintDetail, setComplaintDetail] = useState<ComplaintDetail | null>(null)
     const [loadingDetail, setLoadingDetail] = useState(false)
     const [upvoting, setUpvoting] = useState(false)
+
+    // Deep link from Map
+    useEffect(() => {
+        if (selectedCommunityComplaintId) {
+            handleOpenComplaint(selectedCommunityComplaintId)
+            // Clear the selection so it doesn't re-open if the user closes it and switches back
+            setSelectedCommunityComplaintId(null)
+        }
+    }, [selectedCommunityComplaintId])
 
     // Image Viewer State
     const [viewerOpen, setViewerOpen] = useState(false)

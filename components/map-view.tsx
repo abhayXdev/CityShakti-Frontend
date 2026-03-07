@@ -12,9 +12,12 @@ import { Complaint } from "@/lib/data"
 export function MapView() {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<maplibregl.Map | null>(null)
-    const { user, complaints, wardComplaints } = useApp()
+    const { user, complaints, wardComplaints, setActiveView, setSelectedCommunityComplaintId } = useApp()
     const isCitizen = user?.role === "citizen"
-    const sourceData = isCitizen && wardComplaints.length > 0 ? wardComplaints : complaints
+
+    // STRICT FILTERING: Citizens only see their ward's community complaints. 
+    // Others (Sudo/Officer) see the general complaints list.
+    const sourceData = isCitizen ? wardComplaints : complaints
 
     useEffect(() => {
         if (map.current) return // initialize map only once
@@ -71,7 +74,15 @@ export function MapView() {
                 <span class="text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold ${isResolved ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}">${complaint.status}</span>
                 <span class="text-[10px] text-muted-foreground uppercase tracking-wider">${complaint.category}</span>
               </div>
-              <p class="text-xs text-muted-foreground line-clamp-2">${complaint.description}</p>
+              <p class="text-xs text-muted-foreground line-clamp-2 mb-3">${complaint.description}</p>
+              ${isCitizen ? `
+                <button 
+                  class="view-community-btn w-full py-1.5 px-3 bg-primary text-primary-foreground text-[10px] font-bold rounded-md hover:opacity-90 transition-opacity"
+                  data-complaint-id="${complaint.id}"
+                >
+                  Support in Community
+                </button>
+              ` : ''}
             </div>
           `
 
@@ -80,6 +91,26 @@ export function MapView() {
                         .setPopup(new maplibregl.Popup({ offset: 15, closeButton: false }).setHTML(popupContent))
                         .addTo(map.current!)
                 }
+            })
+
+            // Delegate click event for the dynamically generated "Support in Community" buttons
+            const handlePopupClick = (e: MouseEvent) => {
+                const target = e.target as HTMLElement
+                if (target.classList.contains('view-community-btn')) {
+                    const complaintId = target.getAttribute('data-complaint-id')
+                    if (complaintId) {
+                        setSelectedCommunityComplaintId(complaintId)
+                        setActiveView('community')
+                    }
+                }
+            }
+
+            const container = mapContainer.current
+            container?.addEventListener('click', handlePopupClick)
+
+            // Clean up event listener when map loads again or changes
+            map.current.on('remove', () => {
+                container?.removeEventListener('click', handlePopupClick)
             })
 
             if (hasValidCoords && map.current) {

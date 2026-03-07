@@ -43,9 +43,10 @@ type AppContextType = {
     resolved: number;
     highPriority: number;
     escalated: number;
-    wardStats?: any[];
     categoryStats?: any[];
   } | null
+  selectedCommunityComplaintId: string | null
+  setSelectedCommunityComplaintId: (id: string | null) => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -66,6 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set())
   const [isRestoring, setIsRestoring] = useState(true)
   const [dashboardStats, setDashboardStats] = useState<AppContextType['dashboardStats']>(null)
+  const [selectedCommunityComplaintId, setSelectedCommunityComplaintId] = useState<string | null>(null)
 
   // Session persistence on mount
   useEffect(() => {
@@ -411,6 +413,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         upvotedIds,
         isRestoring,
         dashboardStats,
+        selectedCommunityComplaintId,
+        setSelectedCommunityComplaintId,
       }}
     >
       {children}
