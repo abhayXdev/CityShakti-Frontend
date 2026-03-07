@@ -109,7 +109,7 @@ export function MapView() {
             container?.addEventListener('click', handlePopupClick)
 
             // Clean up event listener when map loads again or changes
-            map.current.on('remove', () => {
+            map.current?.on('remove', () => {
                 container?.removeEventListener('click', handlePopupClick)
             })
 

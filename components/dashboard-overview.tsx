@@ -138,6 +138,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
   const [progressNote, setProgressNote] = useState("")
   const [updateFile, setUpdateFile] = useState<File | null>(null)
   const [uploadingUpdateImage, setUploadingUpdateImage] = useState(false)
+  const [isActionPending, setIsActionPending] = useState(false)
 
   useEffect(() => {
     if (selectedComplaintId && user?.token) {
@@ -888,25 +889,44 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         return (
                           <>
                             <div className="flex gap-2 mb-4">
-                              <Button size="sm" variant={complaintDetail?.status === 'in-progress' ? "default" : "outline"} onClick={async () => {
-                                try {
-                                  if (!complaintDetail?.id) return;
-                                  await updateComplaintStatus(complaintDetail.id, "in-progress")
-                                  setComplaintDetail({ ...complaintDetail, status: "in-progress" })
-                                } catch (e: any) { alert(e.message || "Failed to update status") }
-                              }}>Mark In-Progress</Button>
-                              <Button size="sm" variant={complaintDetail?.status === 'resolved' ? "default" : "outline"} className={complaintDetail?.status === 'resolved' ? "bg-success hover:bg-success/90" : ""} onClick={async () => {
-                                try {
-                                  if (!complaintDetail?.id) return;
-                                  await updateComplaintStatus(complaintDetail.id, "resolved")
-                                  setComplaintDetail({ ...complaintDetail, status: "resolved" })
-                                } catch (e: any) { alert(e.message || "Failed to resolve") }
-                              }}>Mark Resolved</Button>
+                              <Button
+                                size="sm"
+                                variant={complaintDetail?.status === 'in-progress' ? "default" : "outline"}
+                                disabled={isActionPending || complaintDetail?.status === 'in-progress' || complaintDetail?.status === 'resolved'}
+                                onClick={async () => {
+                                  try {
+                                    if (!complaintDetail?.id) return;
+                                    setIsActionPending(true)
+                                    await updateComplaintStatus(complaintDetail.id, "in-progress")
+                                    setComplaintDetail({ ...complaintDetail, status: "in-progress" })
+                                  } catch (e: any) { alert(e.message || "Failed to update status") }
+                                  finally { setIsActionPending(false) }
+                                }}
+                              >
+                                Mark In-Progress
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={complaintDetail?.status === 'resolved' ? "default" : "outline"}
+                                className={complaintDetail?.status === 'resolved' ? "bg-success hover:bg-success/90" : ""}
+                                disabled={isActionPending || complaintDetail?.status === 'resolved'}
+                                onClick={async () => {
+                                  try {
+                                    if (!complaintDetail?.id) return;
+                                    setIsActionPending(true)
+                                    await updateComplaintStatus(complaintDetail.id, "resolved")
+                                    setComplaintDetail({ ...complaintDetail, status: "resolved" })
+                                  } catch (e: any) { alert(e.message || "Failed to resolve") }
+                                  finally { setIsActionPending(false) }
+                                }}
+                              >
+                                Mark Resolved
+                              </Button>
                             </div>
                             <div className="grid gap-3 border border-primary/10 p-4 rounded-xl bg-background shadow-sm">
                               <Label className="text-xs font-semibold">Publish Public Progress Update</Label>
                               <div className="flex flex-col sm:flex-row gap-2">
-                                <Select value={progressPhase} onValueChange={setProgressPhase}>
+                                <Select value={progressPhase} onValueChange={setProgressPhase} disabled={isActionPending || complaintDetail?.status === 'resolved'}>
                                   <SelectTrigger className="w-full sm:w-[130px] text-xs h-9"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="update">General Update</SelectItem>
@@ -914,56 +934,77 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                                     <SelectItem value="after">After Completion</SelectItem>
                                   </SelectContent>
                                 </Select>
-                                <Input className="h-9 text-xs" placeholder="Official note for citizens..." value={progressNote} onChange={e => setProgressNote(e.target.value)} />
-                                <Input key={updateFile ? updateFile.name : 'empty-file'} type="file" accept="image/*" onChange={(e) => {
-                                  if (e.target.files && e.target.files.length > 0) {
-                                    setUpdateFile(e.target.files[0])
-                                  }
-                                }} className="h-9 text-xs w-full sm:w-[220px]" />
-                              </div>
-                              <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end hover:shadow-md transition-all" disabled={uploadingUpdateImage} onClick={async () => {
-                                if (!user?.token) return;
-                                let finalPhotoUrl = ""
-                                if (updateFile) {
-                                  setUploadingUpdateImage(true)
-                                  try {
-                                    const imgData = new FormData()
-                                    imgData.append("image", updateFile)
-                                    const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=67f6b0f0a516e87fbf38eb04a080d859", {
-                                      method: "POST",
-                                      body: imgData
-                                    })
-                                    if (uploadRes.ok) {
-                                      const json = await uploadRes.json()
-                                      finalPhotoUrl = json.data.url
+                                <Input
+                                  className="h-9 text-xs"
+                                  placeholder="Official note for citizens..."
+                                  value={progressNote}
+                                  onChange={e => setProgressNote(e.target.value)}
+                                  disabled={isActionPending || complaintDetail?.status === 'resolved'}
+                                />
+                                <Input
+                                  key={updateFile ? updateFile.name : 'empty-file'}
+                                  type="file"
+                                  accept="image/*"
+                                  disabled={isActionPending || complaintDetail?.status === 'resolved'}
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                      setUpdateFile(e.target.files[0])
                                     }
-                                  } catch (e) {
-                                    console.error("Image upload failed", e)
-                                    alert("Image upload failed, please try again.")
+                                  }}
+                                  className="h-9 text-xs w-full sm:w-[220px]"
+                                />
+                              </div>
+                              <Button
+                                size="sm"
+                                className="h-9 mt-1 w-full sm:w-auto self-end hover:shadow-md transition-all"
+                                disabled={isActionPending || uploadingUpdateImage || complaintDetail?.status === 'resolved'}
+                                onClick={async () => {
+                                  if (!user?.token) return;
+                                  let finalPhotoUrl = ""
+                                  setIsActionPending(true)
+                                  if (updateFile) {
+                                    setUploadingUpdateImage(true)
+                                    try {
+                                      const imgData = new FormData()
+                                      imgData.append("image", updateFile)
+                                      const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=67f6b0f0a516e87fbf38eb04a080d859", {
+                                        method: "POST",
+                                        body: imgData
+                                      })
+                                      if (uploadRes.ok) {
+                                        const json = await uploadRes.json()
+                                        finalPhotoUrl = json.data.url
+                                      }
+                                    } catch (e) {
+                                      console.error("Image upload failed", e)
+                                      alert("Image upload failed, please try again.")
+                                    }
+                                    setUploadingUpdateImage(false)
                                   }
-                                  setUploadingUpdateImage(false)
-                                }
-                                if (!complaintDetail?.id) return;
+                                  if (!complaintDetail?.id) { setIsActionPending(false); return; }
 
-                                try {
-                                  const payload: any = { phase: progressPhase }
-                                  if (progressNote.trim()) payload.note = progressNote.trim()
-                                  if (finalPhotoUrl) payload.photo_url = finalPhotoUrl
+                                  try {
+                                    const payload: any = { phase: progressPhase }
+                                    if (progressNote.trim()) payload.note = progressNote.trim()
+                                    if (finalPhotoUrl) payload.photo_url = finalPhotoUrl
 
-                                  await addProgressUpdate(complaintDetail.id, payload)
+                                    await addProgressUpdate(complaintDetail.id, payload)
 
-                                  setProgressNote("")
-                                  setUpdateFile(null)
+                                    setProgressNote("")
+                                    setUpdateFile(null)
 
-                                  if (user?.token && selectedComplaintId) {
-                                    getComplaintDetailApi(user.token, selectedComplaintId).then(data => setComplaintDetail(data))
+                                    if (user?.token && selectedComplaintId) {
+                                      getComplaintDetailApi(user.token, selectedComplaintId).then(data => setComplaintDetail(data))
+                                    }
+                                    alert("Official update published successfully.")
+                                  } catch (err: any) {
+                                    alert(err.message || "Failed to publish update")
+                                  } finally {
+                                    setIsActionPending(false)
                                   }
-                                  alert("Official update published successfully.")
-                                } catch (err: any) {
-                                  alert(err.message || "Failed to publish update")
-                                }
-                              }}>
-                                {uploadingUpdateImage ? "Uploading..." : "Post Official Update"}
+                                }}
+                              >
+                                {uploadingUpdateImage ? "Uploading..." : isActionPending ? "Processing..." : "Post Official Update"}
                               </Button>
                             </div>
                           </>
@@ -1225,7 +1266,7 @@ function SudoDashboard() {
                       <TableCell>{officer.department}</TableCell>
                       <TableCell>{officer.ward}</TableCell>
                       <TableCell className="text-right">
-                     <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2">
                           <Button size="sm" variant="outline" className="border-success/50 text-success hover:bg-success/10 w-24" onClick={() => handleApprove(String(officer.id))}>Approve</Button>
                           <Button size="sm" variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10 w-24" onClick={() => handleReject(String(officer.id))}>Reject</Button>
                         </div>
