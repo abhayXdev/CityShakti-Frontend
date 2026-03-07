@@ -875,8 +875,15 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         console.log(`[DeptMatching] User: ${ud}, Target: ${cd}, Match: ${match}`);
                         return match;
                       })();
+                      const isSameWard = (() => {
+                        if ((user?.role as string) === 'sudo') return true;
+                        if (!user?.ward) return true;
+                        const uw = user.ward.replace(/\s/g, '').toLowerCase();
+                        const cw = (complaintDetail?.location?.area || '').replace(/\s/g, '').toLowerCase();
+                        return !cw || uw === cw;
+                      })();
 
-                      if (isSameDept) {
+                      if (isSameDept && isSameWard) {
                         return (
                           <>
                             <div className="flex gap-2 mb-4">
@@ -962,13 +969,24 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                         );
                       } else {
                         return (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground p-4 bg-background border border-primary/10 rounded-xl">
-                            <AlertCircle className="h-4 w-4 shrink-0 px-0.5" />
-                            You can only resolve complaints assigned to your department ({user?.department || 'Unassigned'}). This issue is handled by {complaintDetail.department}.
+                          <div className="flex flex-col items-start gap-2 text-sm text-muted-foreground p-4 bg-background border border-primary/10 rounded-xl">
+                            {!isSameDept && (
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 shrink-0 px-0.5" />
+                                You can only resolve complaints assigned to your department ({user?.department || 'Unassigned'}). This issue is handled by {complaintDetail.department}.
+                              </div>
+                            )}
+                            {!isSameWard && (
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 shrink-0 px-0.5" />
+                                This issue occurred outside your assigned jurisdiction ({user?.ward || 'Unassigned'}).
+                              </div>
+                            )}
                           </div>
                         );
                       }
-                    })()}
+                    })()
+                    }
                   </div>
                 )}
 

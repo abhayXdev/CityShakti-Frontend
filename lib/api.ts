@@ -34,7 +34,7 @@ function transformComplaint(apiComp: any): Complaint {
         location: {
             lat: apiComp.latitude || 28.6139, // fallback to New Delhi if null
             lng: apiComp.longitude || 77.209,
-            area: apiComp.ward || "Unknown Ward",
+            area: apiComp.incident_ward || apiComp.ward || "Unknown Ward",
         },
         citizenName: String(apiComp.citizen?.full_name || apiComp.citizen_id || "Citizen"),
         authorId: String(apiComp.citizen_id),
