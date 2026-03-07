@@ -245,6 +245,16 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       // Interactive Duplicate Recognition
       if (error.isDuplicate && error.details?.existing_complaint) {
         const existing = error.details.existing_complaint;
+        const isOwn = error.details.is_own_duplicate;
+
+        if (isOwn) {
+          alert(`You have already reported this identical problem: "${existing.title}" (Status: ${existing.status}).\n\nWe are already tracking it for you in your dashboard!`);
+          setIsDialogOpen(false);
+          setFormData({ title: "", category: "", description: "", latitude: "", longitude: "", photo_url: "", incident_ward: "" });
+          setSelectedFile(null);
+          return;
+        }
+
         const confirmUpvote = window.confirm(
           `A similar issue was already reported nearby: "${existing.title}" (Status: ${existing.status}).\n\nWould you like to UPVOTE the existing problem instead of creating a duplicate?`
         );
