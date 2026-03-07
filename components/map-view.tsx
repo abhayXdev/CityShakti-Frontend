@@ -31,7 +31,16 @@ export function MapView() {
             style: `https://api.olamaps.io/routing/v1/mapStyles/olamaps-standard/style.json?api_key=${olaApiKey}`,
             center: [77.2090, 28.6139], // Default to Delhi
             zoom: 12,
-            attributionControl: false
+            attributionControl: false,
+            transformRequest: (url, resourceType) => {
+                if (url.includes("api.olamaps.io")) {
+                    const separator = url.includes("?") ? "&" : "?"
+                    return {
+                        url: `${url}${separator}api_key=${olaApiKey}`,
+                    }
+                }
+                return { url }
+            }
         })
 
         // Wait until map loads before adding markers
