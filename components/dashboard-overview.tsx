@@ -241,6 +241,28 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       setSelectedFile(null)
     } catch (error: any) {
       console.error("Failed to submit complaint:", error)
+
+      // Interactive Duplicate Recognition
+      if (error.isDuplicate && error.details?.existing_complaint) {
+        const existing = error.details.existing_complaint;
+        const confirmUpvote = window.confirm(
+          `A similar issue was already reported nearby: "${existing.title}" (Status: ${existing.status}).\n\nWould you like to UPVOTE the existing problem instead of creating a duplicate?`
+        );
+
+        if (confirmUpvote) {
+          try {
+            await upvoteComplaint(existing.id);
+            alert("Success! You've upvoted the existing issue. This helps the authorities prioritize it faster.");
+            setIsDialogOpen(false);
+            setFormData({ title: "", category: "", description: "", latitude: "", longitude: "", photo_url: "", incident_ward: "" });
+            setSelectedFile(null);
+            return; // Exit without showing generic error
+          } catch (upvoteErr) {
+            console.error("Auto-upvote failed", upvoteErr);
+          }
+        }
+      }
+
       alert(`Submission Failed: ${error?.message || "Please check your inputs and try again."}`)
       setUploadingImage(false)
     } finally {

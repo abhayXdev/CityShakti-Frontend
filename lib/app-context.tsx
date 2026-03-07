@@ -313,8 +313,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const createComplaint = useCallback(
     async (payload: { title: string; description: string; ward: string; category: string; latitude?: number; longitude?: number; photo_url?: string }) => {
       if (!user?.token) throw new Error("Not logged in")
-      const newComplaint = await createComplaintApi(user.token, payload)
-      setComplaints((prev) => [newComplaint, ...prev])
+      try {
+        const newComplaint = await createComplaintApi(user.token, payload)
+        setComplaints((prev) => [newComplaint, ...prev])
+      } catch (err) {
+        console.error("Create complaint failed", err)
+        throw err
+      }
     },
     [user]
   )

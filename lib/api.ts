@@ -247,6 +247,13 @@ export async function createComplaintApi(token: string, payload: {
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({}))
+        // Special handling for 409 Conflict (Duplicate Detection)
+        if (res.status === 409 && err.detail) {
+            const collisionError = new Error("Potential duplicate found") as any;
+            collisionError.isDuplicate = true;
+            collisionError.details = err.detail;
+            throw collisionError;
+        }
         throw new Error(err.detail || "Failed to submit complaint")
     }
 
