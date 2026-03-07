@@ -56,9 +56,10 @@ export function formatPincodeArea(info: PincodeInfo): string {
 }
 
 /**
- * Reverse geocodes coordinates to find the Indian PIN code using OpenStreetMap Nominatim
+ * Reverse geocodes coordinates to find the Indian PIN code using Ola Maps API.
+ * If multiple PIN codes are found (common near boundaries), it will favor the preferredPincode if provided.
  */
-export async function fetchPincodeFromCoordinates(lat: number, lon: number): Promise<string | null> {
+export async function fetchPincodeFromCoordinates(lat: number, lon: number, preferredPincode?: string): Promise<string | null> {
     try {
         const apiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
         if (!apiKey) {
@@ -70,26 +71,42 @@ export async function fetchPincodeFromCoordinates(lat: number, lon: number): Pro
 
         const data = await res.json()
         const results = data?.results || []
+        const pinsFound: string[] = []
 
         for (const result of results) {
             const components = result.address_components || []
             const postalComponent = components.find((c: any) =>
                 c.types?.includes('postal_code') || c.types?.includes('pincode')
             )
+
             if (postalComponent && postalComponent.short_name) {
                 const pin = postalComponent.short_name
-                if (/^\d{6}$/.test(pin)) return pin
+                if (/^\d{6}$/.test(pin) && !pinsFound.includes(pin)) {
+                    pinsFound.push(pin)
+                }
+            }
+
+            // Also check formatted address as a secondary extraction source
+            if (result.formatted_address) {
+                const match = result.formatted_address.match(/\b\d{6}\b/)
+                if (match && !pinsFound.includes(match[0])) {
+                    pinsFound.push(match[0])
+                }
             }
         }
 
-        // Fallback to searching the formatted address string
-        if (results.length > 0 && results[0].formatted_address) {
-            const match = results[0].formatted_address.match(/\b\d{6}\b/)
-            if (match) return match[0]
+        if (pinsFound.length === 0) return null
+
+        // Accuracy Optimization: If multiple wards are detected at this point (common near boundaries)
+        // and one of them is the user's registered home ward, prioritize it.
+        if (preferredPincode && pinsFound.includes(preferredPincode)) {
+            console.log(`[Pincode] Prioritizing preferred PIN ${preferredPincode} from found candidates:`, pinsFound)
+            return preferredPincode
         }
 
-        return null
-    } catch {
+        return pinsFound[0]
+    } catch (error) {
+        console.error("Reverse geocoding error:", error)
         return null
     }
 }

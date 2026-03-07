@@ -162,7 +162,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
 
           let incidentWard = ""
           try {
-            const pin = await fetchPincodeFromCoordinates(lat, lon)
+            const pin = await fetchPincodeFromCoordinates(lat, lon, user?.ward)
             if (pin) incidentWard = pin
           } catch (e) { console.error(e) }
 
