@@ -94,7 +94,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
             // Fetch User's previously upvoted complaint IDs from backend
             // This is done here as well as in login to cover session restoration
-            fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/complaints/user/upvotes`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+            fetch(`${baseUrl}/complaints/user/upvotes`, {
               headers: { Authorization: `Bearer ${savedToken}` }
             })
               .then(res => res.ok ? res.json() : Promise.reject(res))
@@ -195,7 +196,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
             // Fetch User's previously upvoted complaint IDs from backend
             try {
-              const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/complaints/user/upvotes`, {
+              const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+              const res = await fetch(`${baseUrl}/complaints/user/upvotes`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
               if (res.ok) {

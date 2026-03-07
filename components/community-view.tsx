@@ -82,24 +82,26 @@ export function CommunityView() {
         if (!selectedComplaintId || !complaintDetail) return
         setUpvoting(true)
         try {
-            await upvoteComplaint(selectedComplaintId)
-            // Optimistically update the detailed view's vote count
-            setComplaintDetail({
-                ...complaintDetail,
-                upvotes: (complaintDetail.upvotes || 0) + 1,
-                activities: [
-                    ...complaintDetail.activities,
-                    {
-                        id: Date.now().toString(),
-                        action: "Complaint Upvoted",
-                        createdAt: new Date().toISOString(),
-                        actor: user?.name || "Citizen",
-                        details: "Community member upvoted this issue",
-                        previousValue: "",
-                        newValue: "",
-                    }
-                ]
-            })
+            const success = await upvoteComplaint(selectedComplaintId)
+            if (success) {
+                // Optimistically update the detailed view's vote count
+                setComplaintDetail({
+                    ...complaintDetail,
+                    upvotes: (complaintDetail.upvotes || 0) + 1,
+                    activities: [
+                        ...complaintDetail.activities,
+                        {
+                            id: Date.now().toString(),
+                            action: "Complaint Upvoted",
+                            createdAt: new Date().toISOString(),
+                            actor: user?.name || "Citizen",
+                            details: "Community member upvoted this issue",
+                            previousValue: "",
+                            newValue: "",
+                        }
+                    ]
+                })
+            }
         } catch (err: any) {
             alert(err.message || "Failed to upvote complaint.")
         } finally {

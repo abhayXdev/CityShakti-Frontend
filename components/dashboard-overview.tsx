@@ -728,13 +728,13 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                   <div>
                     <span className="text-sm font-semibold mb-2 block flex items-center gap-2">
                       Attached Evidence
-                      <Badge variant="secondary" className="text-[10px] font-normal cursor-pointer" onClick={() => { setViewerImage(complaintDetail.photoUrl!); setViewerOpen(true); }}>
+                      <Badge variant="secondary" className="text-[10px] font-normal cursor-pointer" onClick={() => window.open(complaintDetail.photoUrl!, '_blank')}>
                         <Maximize2 className="h-3 w-3 mr-1" /> View Full Image
                       </Badge>
                     </span>
                     <div
                       className="rounded-xl overflow-hidden border border-muted/50 bg-black/5 cursor-pointer hover:opacity-90 transition-opacity relative group"
-                      onClick={() => { setViewerImage(complaintDetail.photoUrl!); setViewerOpen(true); }}
+                      onClick={() => window.open(complaintDetail.photoUrl!, '_blank')}
                     >
                       <img src={complaintDetail.photoUrl} alt="Complaint Evidence" className="w-full max-h-[300px] object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -797,11 +797,13 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                     <Button
                       onClick={async () => {
                         try {
-                          await upvoteComplaint(complaintDetail.id);
-                          setComplaintDetail({
-                            ...complaintDetail,
-                            upvotes: (complaintDetail.upvotes || 0) + 1
-                          });
+                          const success = await upvoteComplaint(complaintDetail.id);
+                          if (success) {
+                            setComplaintDetail({
+                              ...complaintDetail,
+                              upvotes: (complaintDetail.upvotes || 0) + 1
+                            });
+                          }
                         } catch (e: any) { alert(e.message) }
                       }}
                       disabled={complaintDetail.authorId === user?.id || upvotedIds.has(complaintDetail.id)}
@@ -905,13 +907,13 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                                   </SelectContent>
                                 </Select>
                                 <Input className="h-9 text-xs" placeholder="Official note for citizens..." value={progressNote} onChange={e => setProgressNote(e.target.value)} />
-                                <Input type="file" accept="image/*" onChange={(e) => {
+                                <Input key={updateFile ? updateFile.name : 'empty-file'} type="file" accept="image/*" onChange={(e) => {
                                   if (e.target.files && e.target.files.length > 0) {
                                     setUpdateFile(e.target.files[0])
                                   }
                                 }} className="h-9 text-xs w-full sm:w-[220px]" />
                               </div>
-                              <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end" disabled={uploadingUpdateImage} onClick={async () => {
+                              <Button size="sm" className="h-9 mt-1 w-full sm:w-auto self-end hover:shadow-md transition-all" disabled={uploadingUpdateImage} onClick={async () => {
                                 if (!user?.token) return;
                                 let finalPhotoUrl = ""
                                 if (updateFile) {
@@ -929,15 +931,28 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                                     }
                                   } catch (e) {
                                     console.error("Image upload failed", e)
+                                    alert("Image upload failed, please try again.")
                                   }
                                   setUploadingUpdateImage(false)
                                 }
                                 if (!complaintDetail?.id) return;
-                                await addProgressUpdate(complaintDetail.id, { phase: progressPhase, note: progressNote, photo_url: finalPhotoUrl })
-                                setProgressNote("")
-                                setUpdateFile(null)
-                                if (user?.token && selectedComplaintId) {
-                                  getComplaintDetailApi(user.token, selectedComplaintId).then(data => setComplaintDetail(data))
+
+                                try {
+                                  const payload: any = { phase: progressPhase }
+                                  if (progressNote.trim()) payload.note = progressNote.trim()
+                                  if (finalPhotoUrl) payload.photo_url = finalPhotoUrl
+
+                                  await addProgressUpdate(complaintDetail.id, payload)
+
+                                  setProgressNote("")
+                                  setUpdateFile(null)
+
+                                  if (user?.token && selectedComplaintId) {
+                                    getComplaintDetailApi(user.token, selectedComplaintId).then(data => setComplaintDetail(data))
+                                  }
+                                  alert("Official update published successfully.")
+                                } catch (err: any) {
+                                  alert(err.message || "Failed to publish update")
                                 }
                               }}>
                                 {uploadingUpdateImage ? "Uploading..." : "Post Official Update"}
