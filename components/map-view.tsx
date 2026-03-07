@@ -28,15 +28,18 @@ export function MapView() {
 
         map.current = new maplibregl.Map({
             container: mapContainer.current,
-            style: `https://api.olamaps.io/routing/v1/mapStyles/olamaps-standard/style.json?api_key=${olaApiKey}`,
+            style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json`,
             center: [77.2090, 28.6139], // Default to Delhi
             zoom: 12,
             attributionControl: false,
             transformRequest: (url, resourceType) => {
                 if (url.includes("api.olamaps.io")) {
-                    const separator = url.includes("?") ? "&" : "?"
-                    return {
-                        url: `${url}${separator}api_key=${olaApiKey}`,
+                    // Only append if api_key is not already in the URL
+                    if (!url.includes("api_key=")) {
+                        const separator = url.includes("?") ? "&" : "?"
+                        return {
+                            url: `${url}${separator}api_key=${olaApiKey}`,
+                        }
                     }
                 }
                 return { url }
