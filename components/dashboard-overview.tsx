@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Plus,
   XCircle,
+  Image as ImageIcon,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -202,8 +203,16 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
         imgData.append("image", selectedFile)
 
         // Note: In a real production app, this key should be in an env var.
-        // Using a free ImgBB API key specifically for this CityShakti proto.
-        const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=67f6b0f0a516e87fbf38eb04a080d859", {
+        // Using the ImgBB API key from environment variables.
+        const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+        if (!apiKey) {
+          alert("Image upload failed: ImgBB API key is missing. Please check your .env configuration.");
+          setUploadingImage(false);
+          setIsSubmitting(false);
+          return;
+        }
+
+        const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: "POST",
           body: imgData
         })
@@ -967,7 +976,14 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                                     try {
                                       const imgData = new FormData()
                                       imgData.append("image", updateFile)
-                                      const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=67f6b0f0a516e87fbf38eb04a080d859", {
+                                      const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+                                      if (!apiKey) {
+                                        alert("Update failed: ImgBB API key is missing.");
+                                        setIsActionPending(false);
+                                        setUploadingUpdateImage(false);
+                                        return;
+                                      }
+                                      const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
                                         method: "POST",
                                         body: imgData
                                       })
@@ -1080,6 +1096,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
             <TableHead className="text-xs">Complaint</TableHead>
             <TableHead className="text-xs hidden md:table-cell">Department</TableHead>
             <TableHead className="text-xs">Votes</TableHead>
+            <TableHead className="text-xs">Evidence</TableHead>
             <TableHead className="text-xs">Priority</TableHead>
             <TableHead className="text-xs">Status</TableHead>
             <TableHead className="text-xs hidden lg:table-cell">Date</TableHead>
@@ -1111,6 +1128,24 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
               </TableCell>
               <TableCell>
                 <Badge variant="secondary" className="text-[10px]">{complaint.upvotes || 0}</Badge>
+              </TableCell>
+              <TableCell>
+                {complaint.photoUrl ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-primary hover:text-primary/80 hover:bg-primary/10"
+                    title="View Evidence Image"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(complaint.photoUrl!, '_blank');
+                    }}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground px-2">None</span>
+                )}
               </TableCell>
               <TableCell>
                 <Badge
