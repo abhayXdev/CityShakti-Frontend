@@ -172,7 +172,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                   }
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="h-11 pl-10"
+                  className="h-11 pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 transition-all"
                   required
                 />
               </div>
@@ -194,7 +194,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                   }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 pl-10"
+                  className="h-11 pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 transition-all"
                   required
                 />
               </div>
