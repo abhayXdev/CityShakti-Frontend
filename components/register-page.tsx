@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "motion/react"
 import { registerApi, sendEmailOtpApi, verifyEmailOtpApi } from "@/lib/api"
 import { fetchPincodeInfo, formatPincodeArea, type PincodeInfo, type PincodeStatus } from "@/lib/pincode"
 
@@ -166,40 +167,66 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     // ── SUCCESS SCREEN ─────────────────────────────────────────────
     if (successMsg) {
         return (
-            <div className="flex flex-col items-center justify-center gap-6 py-12 text-center animate-in fade-in-50">
-                <div className="w-20 h-20 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center">
-                    <CheckCircle className="w-10 h-10 text-green-400" />
+            <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-50 py-10">
+                {/* Animated background - Indian Flag Colors */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <motion.div
+                        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/10 blur-[100px]"
+                    />
+                    <motion.div
+                        animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+                        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                        className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/10 blur-[100px]"
+                    />
                 </div>
-                <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Registration Complete!</h2>
-                    <p className="text-slate-400 max-w-sm">{successMsg}</p>
-                </div>
-                <Button
-                    onClick={onBackToLogin}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl"
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative z-10 flex flex-col items-center justify-center gap-6 py-12 text-center rounded-3xl border border-border/50 bg-white/80 p-12 shadow-2xl backdrop-blur-xl max-w-md mx-4"
                 >
-                    Go to Login
-                </Button>
+                    <div className="w-24 h-24 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center shadow-inner">
+                        <CheckCircle className="w-12 h-12 text-green-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-extrabold text-stone-900 mb-3 tracking-tight">Success!</h2>
+                        <p className="text-stone-600 leading-relaxed">{successMsg}</p>
+                    </div>
+                    <Button
+                        onClick={onBackToLogin}
+                        variant="gradient-success"
+                        className="h-12 w-full text-base font-bold shadow-lg"
+                    >
+                        Proceed to Login
+                    </Button>
+                </motion.div>
             </div>
         )
     }
 
     const renderOtpStage = () => (
-        <div className="flex flex-col gap-6 animate-in fade-in-50 slide-in-from-right-4">
+        <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="flex flex-col gap-6"
+        >
             <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mx-auto mb-4">
-                    <Mail className="w-8 h-8 text-blue-400" />
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4 shadow-inner border border-stone-200">
+                    <Mail className="w-8 h-8 text-[#000080]" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">Verify Your Email</h2>
-                <p className="text-muted-foreground text-sm mt-1">
+                <h2 className="text-xl font-bold text-stone-900">Verify Your Email</h2>
+                <p className="text-stone-500 text-sm mt-1">
                     We sent a 6-digit code to{" "}
-                    <span className="text-primary font-semibold">{email}</span>
+                    <span className="text-[#000080] font-semibold">{email}</span>
                 </p>
             </div>
 
             {/* 6-BOX OTP INPUT */}
             <div
-                className="flex justify-center gap-3"
+                className="flex justify-center gap-2.5"
                 onPaste={handleOtpPaste}
             >
                 {otp.map((digit, i) => (
@@ -213,37 +240,43 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                         onChange={e => handleOtpChange(i, e.target.value)}
                         onKeyDown={e => handleOtpKeyDown(i, e)}
                         className={cn(
-                            "w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 bg-secondary/80",
-                            "text-foreground caret-primary outline-none",
-                            "transition-all duration-150",
+                            "w-11 h-14 text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200",
                             digit
-                                ? "border-primary bg-primary/10 shadow-sm shadow-primary/20"
-                                : "border-border focus:border-primary"
+                                ? "border-[#FF9933] bg-[#FF9933]/5 text-[#FF9933] shadow-md shadow-[#FF9933]/10"
+                                : "border-stone-200 bg-stone-50 focus:border-[#FF9933] text-stone-900"
                         )}
                     />
                 ))}
             </div>
 
-            {error && (
-                <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{error}</span>
-                </div>
-            )}
+            <AnimatePresence mode="wait">
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3"
+                    >
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{error}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <Button
                 onClick={handleVerifyAndRegister}
                 disabled={isLoading || otp.join("").length !== 6}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 font-semibold"
+                variant="gradient-success"
+                className="w-full rounded-xl h-12 text-base font-bold shadow-lg"
             >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyRound className="w-4 h-4 mr-2" />}
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <KeyRound className="w-5 h-5 mr-2" />}
                 Verify & Create Account
             </Button>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-sm pt-2">
                 <button
                     onClick={() => { setOtpStage("form"); setError("") }}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-stone-500 hover:text-stone-900 font-medium transition-colors"
                 >
                     ← Change details
                 </button>
@@ -251,30 +284,49 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     onClick={handleResendOtp}
                     disabled={otpCountdown > 0 || isLoading}
                     className={cn(
-                        "flex items-center gap-1.5 transition-colors",
-                        otpCountdown > 0 ? "text-muted-foreground cursor-not-allowed" : "text-primary hover:text-primary/80"
+                        "flex items-center gap-1.5 font-semibold transition-colors",
+                        otpCountdown > 0 ? "text-stone-400 cursor-not-allowed" : "text-[#FF9933] hover:text-[#FFB366]"
                     )}
                 >
                     <RefreshCw className="w-3.5 h-3.5" />
                     {otpCountdown > 0 ? `Resend in ${otpCountdown}s` : "Resend OTP"}
                 </button>
             </div>
-        </div>
+        </motion.div>
     )
 
     const renderFormStage = () => (
-        <div className="flex flex-col gap-5 animate-in fade-in-50">
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="flex flex-col gap-5"
+        >
             {/* ROLE SWITCHER */}
-            <div className="flex bg-secondary/60 rounded-xl p-1 border border-border/50">
+            <div className="flex bg-stone-100 rounded-xl p-1 relative overflow-hidden border border-stone-200">
+                {/* Animated Tab Indicator */}
+                <motion.div
+                    layoutId="regRoleTab"
+                    className={cn(
+                        "absolute inset-y-1 rounded-lg transition-colors duration-300",
+                        role === "citizen" ? "bg-[#FF9933]" : "bg-[#138808]"
+                    )}
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    style={{
+                        width: "calc(50% - 4px)",
+                        left: role === "citizen" ? "2px" : "calc(50% + 2px)",
+                    }}
+                />
+
                 {(["citizen", "officer"] as const).map((r) => (
                     <button
                         key={r}
+                        type="button"
                         onClick={() => setRole(r)}
                         className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all",
-                            role === r
-                                ? "bg-primary text-primary-foreground shadow-md"
-                                : "text-muted-foreground hover:text-foreground"
+                            "relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all",
+                            role === r ? "text-white" : "text-stone-500 hover:text-stone-900"
                         )}
                     >
                         {r === "citizen" ? <User className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
@@ -433,76 +485,110 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 )}
             </div>
 
-            {error && (
-                <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{error}</span>
-                </div>
-            )}
+            <AnimatePresence mode="wait">
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3"
+                    >
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{error}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <Button
                 onClick={handleSendOtp}
                 disabled={isLoading}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-11 font-semibold mt-1"
+                variant={role === "citizen" ? "gradient" : "gradient-success"}
+                className="w-full rounded-xl h-12 text-base font-bold mt-2 shadow-lg"
             >
                 {isLoading
-                    ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Sending OTP…</>
-                    : <><ArrowRight className="w-4 h-4 mr-2" />Continue — Verify Email</>
+                    ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />Sending OTP…</>
+                    : <><ArrowRight className="w-5 h-5 mr-2" />Continue — Verify Email</>
                 }
             </Button>
-        </div>
+        </motion.div>
     )
 
     // ── MAIN RENDER ──────────────────────────────────────────────
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background py-10">
-            {/* Animated background */}
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-50 py-10">
+            {/* Animated background - Indian Flag Colors */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-1/2 -left-1/2 h-full w-full animate-[spin_20s_linear_infinite] rounded-full bg-primary/5" />
-                <div className="absolute -right-1/2 -bottom-1/2 h-full w-full animate-[spin_25s_linear_infinite_reverse] rounded-full bg-accent/5" />
-                <div className="absolute top-1/4 left-1/4 h-96 w-96 animate-pulse rounded-full bg-primary/3" />
+                <motion.div
+                    animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/10 blur-[100px]"
+                />
+                <motion.div
+                    animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                    className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/10 blur-[100px]"
+                />
+                <motion.div
+                    animate={{ scale: [1, 1.5, 1] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-1/4 left-1/4 h-[40vh] w-[40vh] rounded-full bg-[#000080]/5 blur-[80px]"
+                />
             </div>
 
             {/* Grid pattern overlay */}
             <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                className="absolute inset-0 opacity-[0.04] pointer-events-none"
                 style={{
                     backgroundImage: "linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)",
-                    backgroundSize: "60px 60px",
+                    backgroundSize: "40px 40px",
                 }}
             />
 
-            <div className="relative z-10 mx-4 w-full max-w-md">
-                {/* Header badge */}
-                <div className="mb-8 flex flex-col items-center gap-3 text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
+            <div className="relative z-10 mx-4 w-full max-w-lg">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 flex flex-col items-center gap-3 text-center"
+                >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#FFB366] text-white shadow-xl">
                         <Shield className="h-8 w-8" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-stone-900">
                             Create an Account
                         </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-1 text-stone-500 font-medium">
                             Join the Smart Civic Monitoring System
                         </p>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Glass card */}
-                <div className="rounded-2xl border border-border/50 bg-card/80 p-6 md:p-8 shadow-xl backdrop-blur-xl">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="rounded-3xl border border-border/50 bg-white/80 p-6 md:p-8 shadow-2xl backdrop-blur-xl"
+                >
                     <button
                         onClick={onBackToLogin}
-                        className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
+                        className="flex items-center text-sm font-semibold text-stone-500 hover:text-stone-900 mb-8 transition-colors"
                     >
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to login
                     </button>
 
-                    {otpStage === "otp" ? renderOtpStage() : renderFormStage()}
-                </div>
+                    <AnimatePresence mode="wait">
+                        {otpStage === "otp" ? (
+                            <div key="otp">{renderOtpStage()}</div>
+                        ) : (
+                            <div key="form">{renderFormStage()}</div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
 
-                <p className="mt-6 text-center text-xs text-muted-foreground">
-                    Secured by National Informatics Centre (NIC)
+                <p className="mt-8 text-center text-xs font-semibold text-stone-400 tracking-wider">
+                    SECURED BY NATIONAL INFORMATICS CENTRE (NIC)
                 </p>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useApp } from "@/lib/app-context"
+import { motion, AnimatePresence } from "motion/react"
 import { Shield, User, Lock, ArrowRight, AlertCircle, Building2, Mail, CheckCircle, Loader2, RefreshCw, KeyRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -50,21 +51,33 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/2 h-full w-full animate-[spin_20s_linear_infinite] rounded-full bg-primary/5" />
-        <div className="absolute -right-1/2 -bottom-1/2 h-full w-full animate-[spin_25s_linear_infinite_reverse] rounded-full bg-accent/5" />
-        <div className="absolute top-1/4 left-1/4 h-96 w-96 animate-pulse rounded-full bg-primary/3" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-50">
+      {/* Animated background - Indian Flag Colors */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/10 blur-[100px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/10 blur-[100px]"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.5, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/4 h-[40vh] w-[40vh] rounded-full bg-[#000080]/5 blur-[80px]"
+        />
       </div>
 
       {/* Grid pattern overlay */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
           backgroundImage:
             "linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
+          backgroundSize: "40px 40px",
         }}
       />
 
@@ -85,16 +98,34 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
         </div>
 
         {/* Glass card */}
-        <div className="rounded-2xl border border-border/50 bg-card/80 p-8 shadow-xl backdrop-blur-xl">
-          <div className="mb-6 flex gap-2 rounded-xl bg-secondary p-1">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="rounded-3xl border border-border/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl"
+        >
+          <div className="mb-8 flex gap-2 rounded-xl bg-stone-100/80 p-1 relative overflow-hidden">
+            {/* Animated Tab Indicator */}
+            <motion.div
+              layoutId="activeTab"
+              className={cn(
+                "absolute inset-y-1 rounded-lg transition-colors duration-300",
+                role === "citizen" ? "bg-[#FF9933]" : role === "officer" ? "bg-[#138808]" : "bg-[#000080]"
+              )}
+              initial={false}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              style={{
+                width: "calc(33.333% - 4px)",
+                left: role === "citizen" ? "2px" : role === "officer" ? "calc(33.333% + 2px)" : "calc(66.666% + 2px)",
+              }}
+            />
+
             <button
               type="button"
               onClick={() => { setRole("citizen"); setError("") }}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                role === "citizen"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+                role === "citizen" ? "text-white" : "text-stone-500 hover:text-stone-900"
               )}
             >
               <User className="h-4 w-4" />
@@ -104,10 +135,8 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               type="button"
               onClick={() => { setRole("officer"); setError("") }}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                role === "officer"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+                role === "officer" ? "text-white" : "text-stone-500 hover:text-stone-900"
               )}
             >
               <Building2 className="h-4 w-4" />
@@ -117,10 +146,8 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               type="button"
               onClick={() => { setRole("sudo"); setError("") }}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                role === "sudo"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+                role === "sudo" ? "text-white" : "text-stone-500 hover:text-stone-900"
               )}
             >
               <Shield className="h-4 w-4" />
@@ -184,16 +211,24 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               </button>
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive border border-destructive/20"
+                >
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <Button
               type="submit"
-              className="h-11 w-full gap-2 text-sm font-semibold"
+              variant={role === "citizen" ? "gradient" : role === "officer" ? "gradient-success" : "gradient-navy"}
+              className="h-12 w-full gap-2 text-base font-bold shadow-lg"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -219,12 +254,12 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               Register here
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* FORGOT PASSWORD MODAL */}
         {showForgot && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }}>
-            <div className="w-full max-w-sm rounded-2xl border border-border/50 bg-card/95 p-7 shadow-2xl backdrop-blur-xl animate-in fade-in-50 zoom-in-95">
+            <div className="w-full max-w-sm rounded-3xl border border-border/50 bg-card/95 p-7 shadow-2xl backdrop-blur-xl animate-in fade-in-50 zoom-in-95">
 
               {fpStep === "done" ? (
                 <div className="flex flex-col items-center gap-4 text-center py-4">
