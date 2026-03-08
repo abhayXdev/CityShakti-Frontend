@@ -38,14 +38,19 @@ export function MapView() {
 
             map.current = new maplibregl.Map({
                 container: mapContainer.current,
-                style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${olaApiKey}`,
+                style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json`,
                 center: [77.2090, 28.6139],
                 zoom: 12,
                 attributionControl: false,
                 transformRequest: (url, resourceType) => {
-                    if (url.includes("api.olamaps.io") && !url.includes("api_key=")) {
-                        const sep = url.includes("?") ? "&" : "?"
-                        return { url: `${url}${sep}api_key=${olaApiKey}` }
+                    if (url.includes("api.olamaps.io")) {
+                        // Only append if api_key is not already in the URL
+                        if (!url.includes("api_key=")) {
+                            const separator = url.includes("?") ? "&" : "?"
+                            return {
+                                url: `${url}${separator}api_key=${olaApiKey}`,
+                            }
+                        }
                     }
                     return { url }
                 }
@@ -139,24 +144,25 @@ export function MapView() {
             if (hasValidCoords && map.current && !boundsInitializedRef.current) {
                 boundsInitializedRef.current = true
                 
-                // Jump to the bounds instantly to avoid maxBounds vs animation conflict
-                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
+                // Fit to initial data
+                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16 })
 
-                // Lock pan to jurisdiction for non-sudo users
+                // Restriction Logic for Citizens/Officers
                 if (user?.role !== "sudo") {
+                    // Calculate Elastic Bounding Box with 50% padding (extra generous to avoid "stuck" feeling)
                     const sw = bounds.getSouthWest()
                     const ne = bounds.getNorthEast()
                     
-                    // Add more explicit generous boundaries (approx 3-5 km buffer)
-                    const latDiff = Math.max(Math.abs(ne.lat - sw.lat), 0.05)
-                    const lngDiff = Math.max(Math.abs(ne.lng - sw.lng), 0.05)
+                    const latDiff = Math.abs(ne.lat - sw.lat) || 0.02
+                    const lngDiff = Math.abs(ne.lng - sw.lng) || 0.02
                     
                     const elasticBounds = new maplibregl.LngLatBounds(
-                        [sw.lng - lngDiff * 0.8, sw.lat - latDiff * 0.8],
-                        [ne.lng + lngDiff * 0.8, ne.lat + latDiff * 0.8]
+                        [sw.lng - lngDiff * 0.5, sw.lat - latDiff * 0.5],
+                        [ne.lng + lngDiff * 0.5, ne.lat + latDiff * 0.5]
                     )
+
                     map.current.setMaxBounds(elasticBounds)
-                    map.current.setMinZoom(9)
+                    map.current.setMinZoom(8) // Allow zooming out a bit more
                 }
             }
         }
@@ -233,12 +239,12 @@ export function MapView() {
                     </div>
                 </div>
 
-                {/* Map area — flex-1 + min-h-0 ensures it takes all remaining height */}
-                <div className="flex-1 relative min-h-0">
+                {/* Map area */}
+                <div className="p-0 flex-1 relative min-h-[400px] z-10">
                     <div
                         ref={mapContainer}
-                        className="absolute inset-0 w-full h-full"
-                        style={{ borderRadius: "0 0 2.5rem 2.5rem" }}
+                        className="w-full h-full rounded-b-[2.5rem] bg-stone-50"
+                        style={{ position: 'relative' }}
                     />
                 </div>
             </div>
