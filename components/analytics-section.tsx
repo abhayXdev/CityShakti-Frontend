@@ -98,7 +98,7 @@ export function AnalyticsSection() {
         <h2 className="text-lg font-semibold text-foreground">
           Advanced Analytics
         </h2>
-        <div className="flex gap-1 rounded-lg bg-secondary p-1">
+        <div className="flex gap-1 rounded-lg bg-stone-100 p-1 border border-stone-200 shadow-sm">
           <Button
             variant="ghost"
             size="sm"

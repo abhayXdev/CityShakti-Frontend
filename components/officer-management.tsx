@@ -78,17 +78,17 @@ export function OfficerManagement() {
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-2">
-                    <div className="flex flex-col items-center rounded-lg bg-secondary p-2">
+                    <div className="flex flex-col items-center rounded-lg bg-success/10 p-2">
                       <span className="text-base font-bold text-success">{resolved}</span>
-                      <span className="text-[10px] text-muted-foreground">Done</span>
+                      <span className="text-[10px] font-medium text-success/80">Done</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-lg bg-secondary p-2">
-                      <span className="text-base font-bold text-chart-4">{pending}</span>
-                      <span className="text-[10px] text-muted-foreground">Pending</span>
+                    <div className="flex flex-col items-center rounded-lg bg-warning/10 p-2">
+                      <span className="text-base font-bold text-warning-foreground">{pending}</span>
+                      <span className="text-[10px] font-medium text-warning-foreground/80">Pending</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-lg bg-secondary p-2">
+                    <div className="flex flex-col items-center rounded-lg bg-chart-1/10 p-2">
                       <span className="text-base font-bold text-chart-1">{assigned}</span>
-                      <span className="text-[10px] text-muted-foreground">Active</span>
+                      <span className="text-[10px] font-medium text-chart-1/80">Active</span>
                     </div>
                   </div>
 
@@ -98,9 +98,9 @@ export function OfficerManagement() {
                       <span>Resolution rate</span>
                       <span className="font-medium text-foreground">{resolutionPct}%</span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                    <div className="h-1.5 w-full rounded-full bg-stone-100 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-success transition-all"
+                        className="h-full rounded-full bg-success transition-all shadow-sm"
                         style={{ width: `${resolutionPct}%` }}
                       />
                     </div>
