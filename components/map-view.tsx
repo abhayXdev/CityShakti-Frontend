@@ -149,22 +149,26 @@ export function MapView() {
 
     return (
         <div className="flex flex-col gap-6 h-full pb-10">
-            <Card className="h-[calc(100vh-140px)] min-h-[500px] flex flex-col shadow-2xl border-none bg-white/70 backdrop-blur-md overflow-hidden relative rounded-[2.5rem]">
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
-                <CardHeader className="pb-4 pt-6 px-8 border-b border-stone-100 flex flex-row items-center justify-between z-10 bg-white/40 backdrop-blur-md">
+            {/* Royal Indian theme wrapper - does NOT clip the map canvas */}
+            <div className="h-[calc(100vh-140px)] min-h-[500px] flex flex-col shadow-2xl relative rounded-[2.5rem] border border-stone-200/60" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                {/* Rangoli pattern - purely decorative */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none rounded-[2.5rem]" style={{ backgroundImage: RANGOLI_PATTERN }} />
+
+                {/* Header */}
+                <div className="flex-none pb-4 pt-6 px-8 border-b border-stone-100 flex flex-row items-center justify-between z-10" style={{ background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(8px)', borderRadius: '2.5rem 2.5rem 0 0' }}>
                     <div>
-                        <CardTitle className="flex items-center gap-3 text-2xl font-black text-stone-900 uppercase tracking-tight">
+                        <h2 className="flex items-center gap-3 text-2xl font-black text-stone-900 uppercase tracking-tight">
                             <div className="p-2 rounded-xl bg-[#2B6CEE]/10 border border-[#2B6CEE]/20">
                                 <MapPin className="w-6 h-6 text-[#2B6CEE]" />
                             </div>
                             Interactive Civic Map
-                        </CardTitle>
-                        <CardDescription className="mt-1.5 text-stone-500 font-medium ml-11">
+                        </h2>
+                        <p className="mt-1.5 text-stone-500 font-medium ml-11 text-sm">
                             Viewing exact locations of complaints for{" "}
                             <span className="text-[#2B6CEE] font-bold">
                                 {user?.ward ? `Ward ${user.ward}` : "all jurisdictions"}
                             </span>
-                        </CardDescription>
+                        </p>
                     </div>
                     <div className="flex gap-3">
                         <Badge variant="outline" className="text-[#FF9933] gap-2 border-[#FF9933]/20 bg-[#FF9933]/5 px-3 py-1.5 font-bold uppercase tracking-widest text-[10px] rounded-full">
@@ -174,11 +178,13 @@ export function MapView() {
                             <div className="w-2 h-2 rounded-full bg-success" /> Resolved
                         </Badge>
                     </div>
-                </CardHeader>
-                <CardContent className="p-0 flex-1 relative">
-                    <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-                </CardContent>
-            </Card>
+                </div>
+
+                {/* Map container - flex-1 so it fills remaining height, relative for the absolute child */}
+                <div className="flex-1 relative min-h-0">
+                    <div ref={mapContainer} className="absolute inset-0 w-full h-full" style={{ borderRadius: '0 0 2.5rem 2.5rem' }} />
+                </div>
+            </div>
         </div>
     )
 }
