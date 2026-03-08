@@ -59,6 +59,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          {/* Decorative Background Elements */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#FF9933]/5 rounded-full blur-[120px] dark:bg-[#FF9933]/10" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#138808]/5 rounded-full blur-[120px] dark:bg-[#138808]/10" />
+          </div>
           {children}
         </ThemeProvider>
         <Analytics />

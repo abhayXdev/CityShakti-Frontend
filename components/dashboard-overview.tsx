@@ -17,6 +17,7 @@ import {
   Plus,
   XCircle,
   Image as ImageIcon,
+  Shield,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -372,8 +373,13 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                       <AnimatedCounter target={stat.value} />
                     </span>
                   </div>
-                  <div className={cn("rounded-xl p-2.5", stat.bg)}>
-                    <stat.icon className={cn("h-5 w-5", stat.color)} />
+                  <div className={cn("rounded-xl p-2.5 bg-gradient-to-br shadow-lg",
+                    stat.title === "Total Complaints" ? "from-[#FF9933] to-[#FFB366] text-white" :
+                      stat.title === "Resolved" ? "from-[#138808] to-[#22c55e] text-white" :
+                        stat.title === "Escalated" ? "from-red-500 to-red-600 text-white" :
+                          "from-blue-500 to-blue-600 text-white"
+                  )}>
+                    <stat.icon className="h-5 w-5" />
                   </div>
                 </div>
                 <div className="mt-3 flex items-center gap-1.5">
@@ -399,9 +405,9 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
       ) : (
         <div className="flex flex-col gap-4">
           {!isTrackingOnly && (
-            <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-background to-blue-500/10 p-8 md:p-12 shadow-sm mb-6">
-              <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
-                <AlertCircle className="w-64 h-64 text-primary" />
+            <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-[#FF9933]/15 via-white/80 to-[#138808]/15 p-8 md:p-12 shadow-xl backdrop-blur-md mb-6 dark:from-[#FF9933]/10 dark:via-black/40 dark:to-[#138808]/10">
+              <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+                <Shield className="w-64 h-64 text-[#FF9933]" />
               </div>
               <div className="relative z-10 max-w-2xl">
                 <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
@@ -412,7 +418,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 </p>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button size="lg" className="h-14 px-8 text-base font-medium shadow-md transition-transform hover:scale-105">
+                    <Button variant="gradient" size="lg" className="h-14 px-8 text-base font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
                       <Plus className="mr-2 h-5 w-5" />
                       Make a New Complaint
                     </Button>

@@ -19,6 +19,8 @@ import {
   Map,
 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { AnimatePresence } from "motion/react"
+import { PageTransition } from "@/components/page-transition"
 import {
   Sidebar,
   SidebarContent,
@@ -81,7 +83,7 @@ export function DashboardLayout() {
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF9933] to-[#FFB366] text-white shadow-lg shadow-orange-500/20">
               <Shield className="h-5 w-5" />
             </div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
@@ -175,7 +177,7 @@ export function DashboardLayout() {
       </Sidebar>
 
       <SidebarInset>
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-sm">
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-white/70 backdrop-blur-md px-4 dark:bg-black/40">
           <SidebarTrigger>
             <ChevronLeft className="h-4 w-4" />
           </SidebarTrigger>
@@ -202,17 +204,63 @@ export function DashboardLayout() {
         </header>
 
         <main className="flex-1 overflow-auto p-4 md:p-6">
-          {activeView === "dashboard" && <DashboardOverview />}
-          {activeView === "my-complaints" && <DashboardOverview />}
-          {activeView === "track-complaints" && <DashboardOverview isTrackingOnly={true} />}
-          {activeView === "maps" && <MapView />}
-          {activeView === "community" && <CommunityView />}
-          {activeView === "contact" && <ContactUsView />}
-          {activeView === "analytics" && <AnalyticsSection />}
-          {activeView === "departments" && <OfficerManagement />}
-          {activeView === "notifications" && <NotificationFeed />}
-          {activeView === "export" && <ExportReports />}
-          {activeView === "ai" && <AIFeatures />}
+          <AnimatePresence mode="wait">
+            {activeView === "dashboard" && (
+              <PageTransition key="dashboard">
+                <DashboardOverview />
+              </PageTransition>
+            )}
+            {activeView === "my-complaints" && (
+              <PageTransition key="my-complaints">
+                <DashboardOverview />
+              </PageTransition>
+            )}
+            {activeView === "track-complaints" && (
+              <PageTransition key="track-complaints">
+                <DashboardOverview isTrackingOnly={true} />
+              </PageTransition>
+            )}
+            {activeView === "maps" && (
+              <PageTransition key="maps">
+                <MapView />
+              </PageTransition>
+            )}
+            {activeView === "community" && (
+              <PageTransition key="community">
+                <CommunityView />
+              </PageTransition>
+            )}
+            {activeView === "contact" && (
+              <PageTransition key="contact">
+                <ContactUsView />
+              </PageTransition>
+            )}
+            {activeView === "analytics" && (
+              <PageTransition key="analytics">
+                <AnalyticsSection />
+              </PageTransition>
+            )}
+            {activeView === "departments" && (
+              <PageTransition key="departments">
+                <OfficerManagement />
+              </PageTransition>
+            )}
+            {activeView === "notifications" && (
+              <PageTransition key="notifications">
+                <NotificationFeed />
+              </PageTransition>
+            )}
+            {activeView === "export" && (
+              <PageTransition key="export">
+                <ExportReports />
+              </PageTransition>
+            )}
+            {activeView === "ai" && (
+              <PageTransition key="ai">
+                <AIFeatures />
+              </PageTransition>
+            )}
+          </AnimatePresence>
         </main>
       </SidebarInset>
     </SidebarProvider>

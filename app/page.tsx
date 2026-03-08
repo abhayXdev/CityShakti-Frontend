@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { AppProvider, useApp } from "@/lib/app-context"
+import { AnimatePresence } from "motion/react"
+import { PageTransition } from "@/components/page-transition"
 import { LoginPage } from "@/components/login-page"
 import { RegisterPage } from "@/components/register-page"
 import { DashboardLayout } from "@/components/dashboard-layout"
@@ -18,14 +20,25 @@ function AppContent() {
     )
   }
 
-  if (!user) {
-    if (showRegister) {
-      return <RegisterPage onBackToLogin={() => setShowRegister(false)} />
-    }
-    return <LoginPage onSwitchToRegister={() => setShowRegister(true)} />
-  }
-
-  return <DashboardLayout />
+  return (
+    <AnimatePresence mode="wait">
+      {!user ? (
+        showRegister ? (
+          <PageTransition key="register">
+            <RegisterPage onBackToLogin={() => setShowRegister(false)} />
+          </PageTransition>
+        ) : (
+          <PageTransition key="login">
+            <LoginPage onSwitchToRegister={() => setShowRegister(true)} />
+          </PageTransition>
+        )
+      ) : (
+        <PageTransition key="layout">
+          <DashboardLayout />
+        </PageTransition>
+      )}
+    </AnimatePresence>
+  )
 }
 
 export default function Home() {
