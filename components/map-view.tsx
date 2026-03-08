@@ -33,7 +33,7 @@ export function MapView() {
 
         map.current = new maplibregl.Map({
             container: mapContainer.current,
-            style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json`,
+            style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${olaApiKey}`,
             center: [77.2090, 28.6139],
             zoom: 12,
             attributionControl: false,
@@ -46,6 +46,12 @@ export function MapView() {
             }
         })
 
+        // Ensure map resizes correctly if container dimensions change
+        const resizeObserver = new ResizeObserver(() => {
+            map.current?.resize()
+        })
+        resizeObserver.observe(mapContainer.current)
+
         map.current.on("load", () => {
             mapLoadedRef.current = true
             // Trigger the marker update now that the map is ready
@@ -54,6 +60,7 @@ export function MapView() {
 
         // Only remove map when the component truly unmounts
         return () => {
+            resizeObserver.disconnect()
             mapLoadedRef.current = false
             map.current?.remove()
             map.current = null
@@ -114,7 +121,11 @@ export function MapView() {
 
             // Fit bounds to complaints
             if (hasValidCoords && map.current) {
-                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16 })
+                // Clear any existing maxBounds before panning
+                map.current.setMaxBounds(null)
+
+                // Use animate: false to prevent maxBounds from clashing with the pan animation
+                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
 
                 // Lock pan to jurisdiction for non-sudo users
                 if (user?.role !== "sudo") {
@@ -151,11 +162,14 @@ export function MapView() {
         if (mapLoadedRef.current) {
             placeMarkers()
         } else {
+            // Unbind previous listener if any to avoid stacking
+            map.current?.off("data-ready", placeMarkers)
             map.current?.once("data-ready", placeMarkers)
         }
 
         return () => {
             mapContainer.current?.removeEventListener("click", handleClick)
+            map.current?.off("data-ready", placeMarkers)
         }
     }, [sourceData, user?.role, isCitizen, setActiveView, setSelectedCommunityComplaintId])
 
