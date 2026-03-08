@@ -346,7 +346,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             placeholder="Abhay Kumar"
                             value={fullName}
                             onChange={e => setFullName(e.target.value)}
-                            className="pl-10 bg-secondary/70 h-11"
+                            className="pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 h-11"
                         />
                     </div>
                 </div>
@@ -361,7 +361,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             placeholder="you@example.com"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
-                            className="pl-10 bg-secondary/70 h-11"
+                            className="pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 h-11"
                         />
                     </div>
                 </div>
@@ -376,7 +376,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             placeholder="Min. 8 characters"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            className="pl-10 pr-10 bg-secondary/70 h-11"
+                            className="pl-10 pr-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 h-11"
                         />
                         <button
                             type="button"
@@ -399,7 +399,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                             value={confirmPassword}
                             onChange={e => setConfirmPassword(e.target.value)}
                             className={cn(
-                                "pl-10 pr-10 bg-secondary/70 h-11",
+                                "pl-10 pr-10 bg-white border-stone-200 h-11 transition-all focus:border-[#FF9933] focus:ring-[#FF9933]/10",
                                 confirmPassword && confirmPassword !== password && "border-destructive focus-visible:ring-destructive",
                                 confirmPassword && confirmPassword === password && "border-green-500 focus-visible:ring-green-500",
                             )}
@@ -432,7 +432,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                                 placeholder="6-digit PIN code"
                                 value={pincode}
                                 onChange={e => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                                className="pl-10 bg-secondary/70 h-11"
+                                className="pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 h-11"
                             />
                         </div>
                         {pincodeStatus === "loading" && <p className="text-muted-foreground text-xs ml-1">Looking up PIN code…</p>}
@@ -456,7 +456,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                                     placeholder="6-digit PIN code"
                                     value={pincode}
                                     onChange={e => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                                    className="pl-10 bg-secondary/70 h-11"
+                                    className="pl-10 bg-stone-50/50 h-11"
                                 />
                             </div>
                             {pincodeStatus === "valid" && pincodeInfo && (
@@ -472,7 +472,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                                 <select
                                     value={department}
                                     onChange={e => setDepartment(e.target.value)}
-                                    className="w-full pl-10 pr-4 h-11 rounded-xl border border-input bg-secondary/70 text-foreground text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring appearance-none"
+                                    className="w-full pl-10 pr-4 h-11 rounded-xl border border-input bg-stone-50/50 text-foreground text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring appearance-none"
                                 >
                                     <option value="" disabled>Select your department</option>
                                     {DEPARTMENTS.map(d => (

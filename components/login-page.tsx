@@ -287,7 +287,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                         <Input
                           type="email" placeholder="you@example.com"
                           value={fpEmail} onChange={e => setFpEmail(e.target.value)}
-                          className="pl-10 h-11"
+                          className="pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 h-11"
                         />
                       </div>
                       {fpError && <p className="text-red-400 text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4" />{fpError}</p>}
