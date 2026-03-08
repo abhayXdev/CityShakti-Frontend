@@ -159,7 +159,7 @@ export function AnalyticsSection() {
           className="relative group cursor-default"
         >
           <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF9933] to-[#F4B400] rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-pulse" />
-          <Card className="relative border-none bg-white/80 backdrop-blur-xl dark:bg-stone-900/80 rounded-2xl p-6 shadow-xl">
+          <Card className="relative border-none bg-white/80 backdrop-blur-md dark:bg-stone-900/80 rounded-2xl p-6 shadow-xl">
             <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Resolution Rate</span>
             <div className="flex items-end gap-2 mt-1">
               <span className="text-3xl font-black text-stone-900 dark:text-white">
@@ -177,7 +177,7 @@ export function AnalyticsSection() {
           className="relative group cursor-default"
         >
           <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2B6CEE] to-blue-400 rounded-2xl blur opacity-10 group-hover:opacity-30 transition duration-1000 group-hover:duration-200" />
-          <Card className="relative border-none bg-white/80 backdrop-blur-xl dark:bg-stone-900/80 rounded-2xl p-6 shadow-xl">
+          <Card className="relative border-none bg-white/80 backdrop-blur-md dark:bg-stone-900/80 rounded-2xl p-6 shadow-xl">
             <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Avg Response</span>
             <div className="flex items-end gap-2 mt-1">
               <span className="text-3xl font-black text-stone-900 dark:text-white">4.2h</span>
@@ -193,7 +193,7 @@ export function AnalyticsSection() {
           className="relative group cursor-default"
         >
           <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl blur opacity-10 group-hover:opacity-30 transition duration-1000 group-hover:duration-200" />
-          <Card className="relative border-none bg-white/80 backdrop-blur-xl dark:bg-stone-900/80 rounded-2xl p-6 shadow-xl">
+          <Card className="relative border-none bg-white/80 backdrop-blur-md dark:bg-stone-900/80 rounded-2xl p-6 shadow-xl">
             <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Active Bottlenecks</span>
             <div className="flex items-end gap-2 mt-1">
               <span className="text-3xl font-black text-stone-900 dark:text-white">
@@ -208,7 +208,7 @@ export function AnalyticsSection() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Status Donut Chart */}
         <motion.div whileHover={{ scale: 1.01 }} className="h-full">
-          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#FF9933]/10">
+          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-md shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#FF9933]/10">
             <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF9933]/10 blur-3xl -mr-16 -mt-16 rounded-full group-hover:bg-[#FF9933]/20 transition-colors duration-500" />
             <CardHeader className="pb-2">
@@ -250,7 +250,7 @@ export function AnalyticsSection() {
 
         {/* Monthly Trend Line Chart */}
         <motion.div whileHover={{ scale: 1.01 }} className="h-full">
-          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#F4B400]/10">
+          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-md shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#F4B400]/10">
             <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#F4B400]/10 blur-3xl -mr-16 -mt-16 rounded-full group-hover:bg-[#F4B400]/20 transition-colors duration-500" />
             <CardHeader className="pb-2">
@@ -309,7 +309,7 @@ export function AnalyticsSection() {
 
         {/* Department Bar Chart */}
         <motion.div whileHover={{ scale: 1.01 }} className="h-full">
-          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#2B6CEE]/10">
+          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-md shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#2B6CEE]/10">
             <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#2B6CEE]/10 blur-3xl -ml-16 -mb-16 rounded-full group-hover:bg-[#2B6CEE]/20 transition-colors duration-500" />
             <CardHeader className="pb-2">
@@ -359,7 +359,7 @@ export function AnalyticsSection() {
 
         {/* Priority Pie Chart */}
         <motion.div whileHover={{ scale: 1.01 }} className="h-full">
-          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#FF9933]/10">
+          <Card className="h-full overflow-hidden border-none bg-white/70 backdrop-blur-md shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-[#FF9933]/10">
             <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
             <div className="absolute top-0 left-0 w-32 h-32 bg-[#FF9933]/10 blur-3xl -ml-16 -mt-16 rounded-full group-hover:bg-[#FF9933]/20 transition-colors duration-500" />
             <CardHeader className="pb-2">

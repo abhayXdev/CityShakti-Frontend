@@ -65,25 +65,17 @@ import { formatDistanceToNow, isPast, format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { MapPin, Maximize2 } from "lucide-react"
 
-function AnimatedCounter({ target, duration = 1200 }: { target: number; duration?: number }) {
-  const [count, setCount] = useState(0)
+import { useSpring, useTransform } from "framer-motion"
+
+function AnimatedCounter({ target, duration = 1.2 }: { target: number; duration?: number }) {
+  const spring = useSpring(0, { bounce: 0, duration: duration * 1000 })
+  const display = useTransform(spring, (current) => Math.floor(current).toLocaleString())
 
   useEffect(() => {
-    let start = 0
-    const increment = target / (duration / 16)
-    const timer = setInterval(() => {
-      start += increment
-      if (start >= target) {
-        setCount(target)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(start))
-      }
-    }, 16)
-    return () => clearInterval(timer)
-  }, [target, duration])
+    spring.set(target)
+  }, [target, spring])
 
-  return <span>{count.toLocaleString()}</span>
+  return <motion.span>{display}</motion.span>
 }
 
 const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -371,7 +363,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
               whileHover={{ y: -5 }}
             >
               <Card
-                className="group relative overflow-hidden border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-[#FF9933]/10 hover:shadow-2xl"
+                className="group relative overflow-hidden border-none bg-white/70 backdrop-blur-md shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-[#FF9933]/10 hover:shadow-2xl"
               >
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardContent className="p-6">
@@ -595,21 +587,21 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
             className="flex flex-col gap-6"
           >
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
+              <Card className="border-none bg-white/70 backdrop-blur-md shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardContent className="p-6 flex flex-col gap-1 relative z-10">
                   <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">My Complaints</span>
                   <span className="text-4xl font-extrabold text-[#0a0e1a] dark:text-white tabular-nums group-hover:text-[#FF9933] transition-colors duration-300">{complaints.length}</span>
                 </CardContent>
               </Card>
-              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
+              <Card className="border-none bg-white/70 backdrop-blur-md shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardContent className="p-6 flex flex-col gap-1 relative z-10">
                   <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Pending</span>
                   <span className="text-4xl font-extrabold text-[#2B6CEE] tabular-nums">{complaints.filter(c => c.status === 'pending').length}</span>
                 </CardContent>
               </Card>
-              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
+              <Card className="border-none bg-white/70 backdrop-blur-md shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardContent className="p-6 flex flex-col gap-1 relative z-10">
                   <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Resolved</span>
@@ -619,7 +611,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 overflow-hidden relative group transition-all duration-500 hover:shadow-[#FF9933]/10">
+              <Card className="border-none bg-white/70 backdrop-blur-md shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 overflow-hidden relative group transition-all duration-500 hover:shadow-[#FF9933]/10">
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardHeader className="pb-2 relative z-10">
                   <CardTitle className="text-base font-bold bg-gradient-to-r from-[#0a0e1a] to-stone-600 bg-clip-text text-transparent dark:from-white dark:to-stone-400">Total Problems per Day</CardTitle>
@@ -650,7 +642,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 </CardContent>
               </Card>
 
-              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 overflow-hidden relative group transition-all duration-500 hover:shadow-[#F4B400]/10">
+              <Card className="border-none bg-white/70 backdrop-blur-md shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 overflow-hidden relative group transition-all duration-500 hover:shadow-[#F4B400]/10">
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardHeader className="pb-2 relative z-10">
                   <CardTitle className="text-base font-bold bg-gradient-to-r from-[#0a0e1a] to-stone-600 bg-clip-text text-transparent dark:from-white dark:to-stone-400">Problems Resolved per Day</CardTitle>

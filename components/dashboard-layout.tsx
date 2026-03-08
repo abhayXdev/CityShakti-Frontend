@@ -189,7 +189,7 @@ export function DashboardLayout() {
       </Sidebar>
 
       <SidebarInset className="bg-[#fdfdfd] dark:bg-[#0a0e1a]">
-        <header className="sticky top-0 z-20 flex h-20 items-center gap-4 border-b border-stone-200/50 bg-white/70 backdrop-blur-2xl px-8 dark:bg-stone-900/60 dark:border-stone-800/50">
+        <header className="sticky top-0 z-20 flex h-20 items-center gap-4 border-b border-stone-200/50 bg-white/70 backdrop-blur-md px-8 dark:bg-stone-900/60 dark:border-stone-800/50">
           <SidebarTrigger className="hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors h-10 w-10">
             <ChevronLeft className="h-5 w-5" />
           </SidebarTrigger>
