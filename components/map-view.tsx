@@ -112,7 +112,9 @@ export function MapView() {
                 // Coloured dot marker
                 const el = document.createElement("div")
                 el.className = "marker"
-                el.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-white shadow-md ${isResolved ? "bg-success" : "bg-destructive"}"></div>`
+                // Inline styles prevent Tailwind CSS from purging the marker during production builds
+                const bgColor = isResolved ? "#16a34a" : "#dc2626"
+                el.innerHTML = `<div style="width: 16px; height: 16px; border-radius: 9999px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: ${bgColor};"></div>`
 
                 const popupContent = `
                     <div class="p-2 min-w-[200px] font-sans text-foreground">
@@ -143,9 +145,12 @@ export function MapView() {
             // Fit bounds to complaints only on initial load or if not yet initialized
             if (hasValidCoords && map.current && !boundsInitializedRef.current) {
                 boundsInitializedRef.current = true
-                
-                // Fit to initial data
-                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16 })
+
+                // IMPORTANT: Clearing previous strict bounds temporarily to allow panning
+                map.current.setMaxBounds(null)
+
+                // Fit to initial data instantly (no animation) to avoid bounds constraint conflicts crashing the camera
+                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
 
                 // Restriction Logic for Citizens/Officers
                 if (user?.role !== "sudo") {
