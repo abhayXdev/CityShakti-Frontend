@@ -6,7 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css"
 import { useApp } from "@/lib/app-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Info } from "lucide-react"
+import { MapPin } from "lucide-react"
 import { Complaint } from "@/lib/data"
 
 const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -21,65 +21,38 @@ export function MapView() {
     // Others (Sudo/Officer) see the general complaints list.
     const sourceData = isCitizen ? wardComplaints : complaints
 
-    const markersRef = useRef<maplibregl.Marker[]>([])
-    const isInitializing = useRef(false)
-
-    // Effect 1: Initialize the map instance ONCE
     useEffect(() => {
-        if (map.current || isInitializing.current) return
+        if (map.current) return // initialize map only once
         if (!mapContainer.current) return
 
         const olaApiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
         if (!olaApiKey) {
-            console.error("Ola Maps API Key is missing")
+            console.error("Ola Maps API Key is missing in environment variables.")
             return
         }
 
-        isInitializing.current = true
-
-        const initTimeout = setTimeout(() => {
-            if (!mapContainer.current || map.current) return
-
-            map.current = new maplibregl.Map({
-                container: mapContainer.current,
-                style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${olaApiKey}`,
-                center: [77.2090, 28.6139],
-                zoom: 12,
-                attributionControl: false,
-                transformRequest: (url) => {
-                    if (url.includes("api.olamaps.io") && !url.includes("api_key=")) {
+        map.current = new maplibregl.Map({
+            container: mapContainer.current,
+            style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json`,
+            center: [77.2090, 28.6139], // Default to Delhi
+            zoom: 12,
+            attributionControl: false,
+            transformRequest: (url, resourceType) => {
+                if (url.includes("api.olamaps.io")) {
+                    // Only append if api_key is not already in the URL
+                    if (!url.includes("api_key=")) {
                         const separator = url.includes("?") ? "&" : "?"
-                        return { url: `${url}${separator}api_key=${olaApiKey}` }
+                        return {
+                            url: `${url}${separator}api_key=${olaApiKey}`,
+                        }
                     }
-                    return { url }
                 }
-            })
-
-            map.current.on('load', () => {
-                // Initial marker update will be triggered by Effect 2
-                // as sourceData changes or map becomes available
-            })
-        }, 100)
-
-        return () => {
-            clearTimeout(initTimeout)
-            if (map.current) {
-                map.current.remove()
-                map.current = null
+                return { url }
             }
-            isInitializing.current = false
-        }
-    }, []) // Run only once
+        })
 
-    // Effect 2: Update markers when sourceData changes
-    useEffect(() => {
-        const updateMarkers = () => {
-            if (!map.current || !map.current.loaded()) return
-
-            // Clear existing markers
-            markersRef.current.forEach(m => m.remove())
-            markersRef.current = []
-
+        // Wait until map loads before adding markers
+        map.current.on('load', () => {
             const bounds = new maplibregl.LngLatBounds()
             let hasValidCoords = false
 
@@ -89,6 +62,7 @@ export function MapView() {
                     const lngLat: [number, number] = [complaint.location.lng, complaint.location.lat]
                     bounds.extend(lngLat)
 
+                    // Create a custom HTML marker
                     const el = document.createElement('div');
                     el.className = 'marker';
                     const isResolved = complaint.status === 'resolved' || complaint.status === 'closed';
@@ -96,39 +70,32 @@ export function MapView() {
                     el.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-white shadow-md ${bgColor}"></div>`
 
                     const popupContent = `
-                        <div class="p-3 min-w-[220px] font-sans text-stone-900 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-stone-200">
-                          <div class="flex items-center gap-2 mb-2">
-                             <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-stone-100 border border-stone-200">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-stone-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                             </div>
-                             <h4 class="font-bold text-sm leading-tight text-stone-900">${complaint.title}</h4>
-                          </div>
-                          <div class="flex items-center gap-2 mb-3">
-                            <span class="text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black ${isResolved ? 'bg-success/10 text-success border border-success/20' : 'bg-[#FF9933]/10 text-[#FF9933] border border-[#FF9933]/20'}">${complaint.status}</span>
-                            <span class="text-[9px] text-stone-400 uppercase tracking-widest font-bold">${complaint.category}</span>
-                          </div>
-                          <p class="text-xs text-stone-500 leading-relaxed line-clamp-2 mb-4">${complaint.description}</p>
-                          ${isCitizen ? `
-                            <button 
-                              class="view-community-btn w-full py-2 px-3 bg-[#FF9933] hover:bg-[#FF9933]/90 text-white text-[10px] font-black rounded-lg shadow-md shadow-[#FF9933]/20 transition-all active:scale-[0.98] uppercase tracking-wider"
-                              data-complaint-id="${complaint.id}"
-                            >
-                              SUPPORT IN COMMUNITY
-                            </button>
-                          ` : ''}
-                        </div>
-                    `
+            <div class="p-2 min-w-[200px] font-sans text-foreground">
+              <h4 class="font-bold text-sm mb-1">${complaint.title}</h4>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold ${isResolved ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}">${complaint.status}</span>
+                <span class="text-[10px] text-muted-foreground uppercase tracking-wider">${complaint.category}</span>
+              </div>
+              <p class="text-xs text-muted-foreground line-clamp-2 mb-3">${complaint.description}</p>
+              ${isCitizen ? `
+                <button 
+                  class="view-community-btn w-full py-1.5 px-3 bg-primary text-primary-foreground text-[10px] font-bold rounded-md hover:opacity-90 transition-opacity"
+                  data-complaint-id="${complaint.id}"
+                >
+                  Support in Community
+                </button>
+              ` : ''}
+            </div>
+          `
 
-                    const marker = new maplibregl.Marker({ element: el })
+                    new maplibregl.Marker({ element: el })
                         .setLngLat(lngLat)
                         .setPopup(new maplibregl.Popup({ offset: 15, closeButton: false }).setHTML(popupContent))
                         .addTo(map.current!)
-
-                    markersRef.current.push(marker)
                 }
             })
 
-            // Delegate click event (shared)
+            // Delegate click event for the dynamically generated "Support in Community" buttons
             const handlePopupClick = (e: MouseEvent) => {
                 const target = e.target as HTMLElement
                 if (target.classList.contains('view-community-btn')) {
@@ -140,89 +107,49 @@ export function MapView() {
                 }
             }
 
-            if (mapContainer.current) {
-                mapContainer.current.removeEventListener('click', handlePopupClick)
-                mapContainer.current.addEventListener('click', handlePopupClick)
-            }
+            const container = mapContainer.current
+            container?.addEventListener('click', handlePopupClick)
+
+            // Clean up event listener when map loads again or changes
+            map.current?.on('remove', () => {
+                container?.removeEventListener('click', handlePopupClick)
+            })
 
             if (hasValidCoords && map.current) {
+                // Fit to initial data
                 map.current.fitBounds(bounds, { padding: 50, maxZoom: 16 })
+
+                // Restriction Logic for Citizens/Officers
                 if (user?.role !== 'sudo') {
+                    // Calculate Elastic Bounding Box with 50% padding (extra generous to avoid "stuck" feeling)
                     const sw = bounds.getSouthWest()
                     const ne = bounds.getNorthEast()
+
                     const latDiff = Math.abs(ne.lat - sw.lat) || 0.02
                     const lngDiff = Math.abs(ne.lng - sw.lng) || 0.02
+
                     const elasticBounds = new maplibregl.LngLatBounds(
                         [sw.lng - lngDiff * 0.5, sw.lat - latDiff * 0.5],
                         [ne.lng + lngDiff * 0.5, ne.lat + latDiff * 0.5]
                     )
+
                     map.current.setMaxBounds(elasticBounds)
-                    map.current.setMinZoom(8)
-
-                    // Draw the visible jurisdictional boundary rectangle
-                    const bSW = elasticBounds.getSouthWest()
-                    const bNE = elasticBounds.getNorthEast()
-                    const boundaryGeoJSON: GeoJSON.Feature<GeoJSON.Polygon> = {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Polygon',
-                            coordinates: [[
-                                [bSW.lng, bSW.lat],
-                                [bNE.lng, bSW.lat],
-                                [bNE.lng, bNE.lat],
-                                [bSW.lng, bNE.lat],
-                                [bSW.lng, bSW.lat],
-                            ]]
-                        },
-                        properties: {}
-                    }
-
-                    // Remove old boundary layers/source if they exist (for re-renders)
-                    if (map.current.getLayer('boundary-fill')) map.current.removeLayer('boundary-fill')
-                    if (map.current.getLayer('boundary-outline')) map.current.removeLayer('boundary-outline')
-                    if (map.current.getSource('boundary-region')) map.current.removeSource('boundary-region')
-
-                    map.current.addSource('boundary-region', { type: 'geojson', data: boundaryGeoJSON })
-
-                    // Semi-transparent saffron fill
-                    map.current.addLayer({
-                        id: 'boundary-fill',
-                        type: 'fill',
-                        source: 'boundary-region',
-                        paint: {
-                            'fill-color': '#FF9933',
-                            'fill-opacity': 0.04,
-                        }
-                    })
-
-                    // Dashed saffron border
-                    map.current.addLayer({
-                        id: 'boundary-outline',
-                        type: 'line',
-                        source: 'boundary-region',
-                        paint: {
-                            'line-color': '#FF9933',
-                            'line-width': 2,
-                            'line-opacity': 0.6,
-                            'line-dasharray': [4, 3],
-                        }
-                    })
+                    map.current.setMinZoom(8) // Allow zooming out a bit more
                 }
             }
-        }
+        })
 
-        if (map.current) {
-            if (map.current.loaded()) {
-                updateMarkers()
-            } else {
-                map.current.once('load', updateMarkers)
+        return () => {
+            if (map.current) {
+                map.current.remove()
+                map.current = null
             }
         }
-    }, [sourceData]) // Only re-run when sourceData changes
+    }, [sourceData])
 
     return (
         <div className="flex flex-col gap-6 h-full pb-10">
-            <Card className="h-[calc(100vh-140px)] min-h-[500px] flex flex-col shadow-2xl border-none bg-white/70 backdrop-blur-2xl overflow-hidden relative rounded-[2.5rem]">
+            <Card className="h-[calc(100vh-140px)] min-h-[500px] flex flex-col shadow-2xl border-none bg-white/70 backdrop-blur-md overflow-hidden relative rounded-[2.5rem]">
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
                 <CardHeader className="pb-4 pt-6 px-8 border-b border-stone-100 flex flex-row items-center justify-between z-10 bg-white/40 backdrop-blur-md">
                     <div>
@@ -233,20 +160,23 @@ export function MapView() {
                             Interactive Civic Map
                         </CardTitle>
                         <CardDescription className="mt-1.5 text-stone-500 font-medium ml-11">
-                            Tracking jurisdictional issues for <span className="text-[#2B6CEE] font-bold">{user?.ward ? `Ward ${user.ward}` : "All Jurisdictions"}</span>
+                            Viewing exact locations of complaints for{" "}
+                            <span className="text-[#2B6CEE] font-bold">
+                                {user?.ward ? `Ward ${user.ward}` : "all jurisdictions"}
+                            </span>
                         </CardDescription>
                     </div>
                     <div className="flex gap-3">
-                        <Badge variant="outline" className="text-[#FF9933] gap-2 border-[#FF9933]/20 bg-[#FF9933]/5 px-3 py-1.5 font-bold uppercase tracking-widest text-[10px] rounded-full"><div className="w-2 h-2 rounded-full bg-[#FF9933] animate-pulse"></div> Active</Badge>
-                        <Badge variant="outline" className="text-success gap-2 border-success/20 bg-success/5 px-3 py-1.5 font-bold uppercase tracking-widest text-[10px] rounded-full"><div className="w-2 h-2 rounded-full bg-success"></div> Resolved</Badge>
+                        <Badge variant="outline" className="text-[#FF9933] gap-2 border-[#FF9933]/20 bg-[#FF9933]/5 px-3 py-1.5 font-bold uppercase tracking-widest text-[10px] rounded-full">
+                            <div className="w-2 h-2 rounded-full bg-[#FF9933] animate-pulse" /> Active
+                        </Badge>
+                        <Badge variant="outline" className="text-success gap-2 border-success/20 bg-success/5 px-3 py-1.5 font-bold uppercase tracking-widest text-[10px] rounded-full">
+                            <div className="w-2 h-2 rounded-full bg-success" /> Resolved
+                        </Badge>
                     </div>
                 </CardHeader>
-                <CardContent className="p-0 flex-1 relative min-h-[400px] z-10">
-                    <div
-                        ref={mapContainer}
-                        className="w-full h-full rounded-b-[2.5rem] bg-stone-50"
-                        style={{ position: 'relative' }}
-                    />
+                <CardContent className="p-0 flex-1 relative">
+                    <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
                 </CardContent>
             </Card>
         </div>
