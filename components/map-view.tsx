@@ -15,6 +15,7 @@ export function MapView() {
     const map = useRef<maplibregl.Map | null>(null)
     const markersRef = useRef<maplibregl.Marker[]>([])
     const mapLoadedRef = useRef(false)
+    const boundsInitializedRef = useRef(false)
 
     const { user, complaints, wardComplaints, setActiveView, setSelectedCommunityComplaintId } = useApp()
     const isCitizen = user?.role === "citizen"
@@ -134,26 +135,28 @@ export function MapView() {
                 markersRef.current.push(marker)
             })
 
-            // Fit bounds to complaints
-            if (hasValidCoords && map.current) {
-                // IMPORTANT: Clearing previous strict bounds temporarily to allow panning
-                map.current.setMaxBounds(null)
+            // Fit bounds to complaints only on initial load or if not yet initialized
+            if (hasValidCoords && map.current && !boundsInitializedRef.current) {
+                boundsInitializedRef.current = true
                 
-                // Do not animate to prevent animation vs maxBounds conflicts that crash canvas rendering
+                // Jump to the bounds instantly to avoid maxBounds vs animation conflict
                 map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
-                
+
                 // Lock pan to jurisdiction for non-sudo users
                 if (user?.role !== "sudo") {
                     const sw = bounds.getSouthWest()
                     const ne = bounds.getNorthEast()
-                    const latDiff = Math.abs(ne.lat - sw.lat) || 0.02
-                    const lngDiff = Math.abs(ne.lng - sw.lng) || 0.02
+                    
+                    // Add more explicit generous boundaries (approx 3-5 km buffer)
+                    const latDiff = Math.max(Math.abs(ne.lat - sw.lat), 0.05)
+                    const lngDiff = Math.max(Math.abs(ne.lng - sw.lng), 0.05)
+                    
                     const elasticBounds = new maplibregl.LngLatBounds(
-                        [sw.lng - lngDiff * 0.5, sw.lat - latDiff * 0.5],
-                        [ne.lng + lngDiff * 0.5, ne.lat + latDiff * 0.5]
+                        [sw.lng - lngDiff * 0.8, sw.lat - latDiff * 0.8],
+                        [ne.lng + lngDiff * 0.8, ne.lat + latDiff * 0.8]
                     )
                     map.current.setMaxBounds(elasticBounds)
-                    map.current.setMinZoom(8)
+                    map.current.setMinZoom(9)
                 }
             }
         }
