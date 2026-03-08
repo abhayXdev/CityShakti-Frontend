@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "motion/react"
 import { registerApi, sendEmailOtpApi, verifyEmailOtpApi } from "@/lib/api"
 import { fetchPincodeInfo, formatPincodeArea, type PincodeInfo, type PincodeStatus } from "@/lib/pincode"
 
+const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+
 interface RegisterPageProps {
     onBackToLogin: () => void
 }
@@ -185,22 +187,24 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="relative z-10 flex flex-col items-center justify-center gap-6 py-12 text-center rounded-3xl border border-border/50 bg-white/80 p-12 shadow-2xl backdrop-blur-xl max-w-md mx-4"
+                    className="relative z-10 flex flex-col items-center justify-center gap-6 py-12 text-center rounded-[2.5rem] border border-white/50 bg-white/70 p-12 shadow-2xl backdrop-blur-2xl max-w-md mx-4 overflow-hidden"
                 >
-                    <div className="w-24 h-24 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center shadow-inner">
-                        <CheckCircle className="w-12 h-12 text-green-500" />
+                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                    <div className="relative z-10 flex flex-col items-center gap-6">
+                        <div className="w-24 h-24 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center shadow-lg ring-8 ring-green-50/50">
+                            <CheckCircle className="w-12 h-12 text-green-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-black text-stone-900 mb-2 tracking-tight uppercase">Success!</h2>
+                            <p className="text-stone-600 leading-relaxed font-medium">{successMsg}</p>
+                        </div>
+                        <Button
+                            onClick={onBackToLogin}
+                            className="h-12 w-full text-base font-black bg-[#138808] hover:bg-[#138808]/90 text-white rounded-xl shadow-lg shadow-[#138808]/20 transition-all active:scale-[0.98]"
+                        >
+                            PROCEED TO LOGIN
+                        </Button>
                     </div>
-                    <div>
-                        <h2 className="text-3xl font-extrabold text-stone-900 mb-3 tracking-tight">Success!</h2>
-                        <p className="text-stone-600 leading-relaxed">{successMsg}</p>
-                    </div>
-                    <Button
-                        onClick={onBackToLogin}
-                        variant="gradient-success"
-                        className="h-12 w-full text-base font-bold shadow-lg"
-                    >
-                        Proceed to Login
-                    </Button>
                 </motion.div>
             </div>
         )
@@ -550,15 +554,15 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8 flex flex-col items-center gap-3 text-center"
                 >
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#FFB366] text-white shadow-xl">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#FFB366] text-white shadow-xl ring-4 ring-white mb-2">
                         <Shield className="h-8 w-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight text-stone-900">
-                            Create an Account
+                        <h1 className="text-4xl font-black tracking-tight text-stone-900 uppercase">
+                            JanSetu
                         </h1>
-                        <p className="mt-1 text-stone-500 font-medium">
-                            Join the Smart Civic Monitoring System
+                        <p className="text-[10px] font-bold text-[#FF9933] tracking-[0.2em] uppercase mt-1">
+                            Citizen & Officer Portal
                         </p>
                     </div>
                 </motion.div>
@@ -568,23 +572,26 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="rounded-3xl border border-border/50 bg-white/80 p-6 md:p-8 shadow-2xl backdrop-blur-xl"
+                    className="rounded-[2.5rem] border border-white/40 bg-white/70 p-6 md:p-8 shadow-2xl backdrop-blur-2xl relative overflow-hidden"
                 >
-                    <button
-                        onClick={onBackToLogin}
-                        className="flex items-center text-sm font-semibold text-stone-500 hover:text-stone-900 mb-8 transition-colors"
-                    >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to login
-                    </button>
+                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                    <div className="relative z-10">
+                        <button
+                            onClick={onBackToLogin}
+                            className="flex items-center text-sm font-semibold text-stone-500 hover:text-stone-900 mb-8 transition-colors"
+                        >
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to login
+                        </button>
 
-                    <AnimatePresence mode="wait">
-                        {otpStage === "otp" ? (
-                            <div key="otp">{renderOtpStage()}</div>
-                        ) : (
-                            <div key="form">{renderFormStage()}</div>
-                        )}
-                    </AnimatePresence>
+                        <AnimatePresence mode="wait">
+                            {otpStage === "otp" ? (
+                                <div key="otp">{renderOtpStage()}</div>
+                            ) : (
+                                <div key="form">{renderFormStage()}</div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </motion.div>
 
                 <p className="mt-8 text-center text-xs font-semibold text-stone-400 tracking-wider">

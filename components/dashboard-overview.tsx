@@ -563,6 +563,22 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                               </p>
                             )}
                           </div>
+                          <DialogFooter className="pt-4 border-t mt-4">
+                            <Button
+                              type="submit"
+                              className="w-full h-12 text-base font-black bg-[#FF9933] hover:bg-[#FF9933]/90 text-white rounded-xl shadow-lg shadow-[#FF9933]/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                              disabled={isSubmitting || !formData.latitude}
+                            >
+                              {isSubmitting ? (
+                                <span className="flex items-center gap-2">
+                                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  SUBMITTING...
+                                </span>
+                              ) : (
+                                "SUBMIT COMPLAINT"
+                              )}
+                            </Button>
+                          </DialogFooter>
                         </div>
                       </form>
                     </DialogContent>

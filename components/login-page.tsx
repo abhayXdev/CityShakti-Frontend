@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { forgotPasswordApi, resetPasswordApi } from "@/lib/api"
 
+const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+
 interface LoginPageProps {
   onSwitchToRegister?: () => void
 }
@@ -84,15 +86,15 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
       <div className="relative z-10 mx-4 w-full max-w-md">
         {/* Header badge */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#FFB366] text-white shadow-xl ring-4 ring-white">
             <Shield className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
-              Smart Civic Monitoring System
+            <h1 className="text-4xl font-black tracking-tight text-stone-900 drop-shadow-sm uppercase">
+              JanSetu
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Government of India - Digital Governance Portal
+            <p className="text-[10px] font-bold text-[#FF9933] tracking-[0.2em] uppercase mt-1">
+              Command Center
             </p>
           </div>
         </div>
@@ -102,145 +104,152 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="rounded-3xl border border-border/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl"
+          className="rounded-3xl border border-white/40 bg-white/70 p-8 shadow-2xl backdrop-blur-2xl relative overflow-hidden"
         >
-          <div className="mb-8 flex gap-2 rounded-xl bg-stone-100/80 p-1 relative overflow-hidden">
-            {/* Animated Tab Indicator */}
-            <motion.div
-              layoutId="activeTab"
-              className={cn(
-                "absolute inset-y-1 rounded-lg transition-colors duration-300",
-                role === "citizen" ? "bg-[#FF9933]" : role === "officer" ? "bg-[#138808]" : "bg-[#000080]"
-              )}
-              initial={false}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              style={{
-                width: "calc(33.333% - 4px)",
-                left: role === "citizen" ? "2px" : role === "officer" ? "calc(33.333% + 2px)" : "calc(66.666% + 2px)",
-              }}
-            />
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+          <div className="relative z-10">
+            <div className="mb-8 flex gap-2 rounded-xl bg-stone-100/80 p-1 relative overflow-hidden">
+              {/* Animated Tab Indicator */}
+              <motion.div
+                layoutId="activeTab"
+                className={cn(
+                  "absolute inset-y-1 rounded-lg transition-all duration-300 shadow-md",
+                  role === "citizen" ? "bg-[#FF9933]" : role === "officer" ? "bg-[#138808]" : "bg-[#2B6CEE]"
+                )}
+                initial={false}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                style={{
+                  width: "calc(33.333% - 4px)",
+                  left: role === "citizen" ? "2px" : role === "officer" ? "calc(33.333% + 2px)" : "calc(66.666% + 2px)",
+                }}
+              />
 
-            <button
-              type="button"
-              onClick={() => { setRole("citizen"); setError("") }}
-              className={cn(
-                "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                role === "citizen" ? "text-white" : "text-stone-500 hover:text-stone-900"
-              )}
-            >
-              <User className="h-4 w-4" />
-              Citizen
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRole("officer"); setError("") }}
-              className={cn(
-                "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                role === "officer" ? "text-white" : "text-stone-500 hover:text-stone-900"
-              )}
-            >
-              <Building2 className="h-4 w-4" />
-              Officer
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRole("sudo"); setError("") }}
-              className={cn(
-                "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                role === "sudo" ? "text-white" : "text-stone-500 hover:text-stone-900"
-              )}
-            >
-              <Shield className="h-4 w-4" />
-              Sudo
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="username" className="text-sm font-medium text-foreground">
-                Username
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder={
-                    role === "sudo" ? "sudo@JanSetu.com"
-                      : role === "officer" ? "officer@example.com"
-                        : "citizen@example.com"
-                  }
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="h-11 pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 transition-all"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                Password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={
-                    role === "sudo" ? "Sudo Password"
-                      : role === "officer" ? "Officer Password"
-                        : "Your password"
-                  }
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 transition-all"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Forgot Password link */}
-            <div className="text-right -mt-1">
               <button
                 type="button"
-                onClick={() => { setShowForgot(true); setFpStep("email"); setFpError(""); setFpEmail(""); setFpOtp(["", "", "", "", "", ""]); setFpNewPw(""); setFpConfirmPw("") }}
-                className="text-xs text-primary hover:underline"
+                onClick={() => { setRole("citizen"); setError("") }}
+                className={cn(
+                  "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+                  role === "citizen" ? "text-white" : "text-stone-500 hover:text-stone-900"
+                )}
               >
-                Forgot password?
+                <User className="h-4 w-4" />
+                Citizen
+              </button>
+              <button
+                type="button"
+                onClick={() => { setRole("officer"); setError("") }}
+                className={cn(
+                  "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+                  role === "officer" ? "text-white" : "text-stone-500 hover:text-stone-900"
+                )}
+              >
+                <Building2 className="h-4 w-4" />
+                Officer
+              </button>
+              <button
+                type="button"
+                onClick={() => { setRole("sudo"); setError("") }}
+                className={cn(
+                  "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+                  role === "sudo" ? "text-white" : "text-stone-500 hover:text-stone-900"
+                )}
+              >
+                <Shield className="h-4 w-4" />
+                Sudo
               </button>
             </div>
 
-            <AnimatePresence mode="wait">
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive border border-destructive/20"
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="username" className="text-sm font-medium text-foreground">
+                  Username
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder={
+                      role === "sudo" ? "sudo@JanSetu.com"
+                        : role === "officer" ? "officer@example.com"
+                          : "citizen@example.com"
+                    }
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="h-11 pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 transition-all"
+                    required
+                  />
+                </div>
+              </div>
 
-            <Button
-              type="submit"
-              variant={role === "citizen" ? "gradient" : role === "officer" ? "gradient-success" : "gradient-navy"}
-              className="h-12 w-full gap-2 text-base font-bold shadow-lg"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder={
+                      role === "sudo" ? "Sudo Password"
+                        : role === "officer" ? "Officer Password"
+                          : "Your password"
+                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 pl-10 bg-white border-stone-200 focus:border-[#FF9933] focus:ring-[#FF9933]/10 transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Forgot Password link */}
+              <div className="text-right -mt-1">
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(true); setFpStep("email"); setFpError(""); setFpEmail(""); setFpOtp(["", "", "", "", "", ""]); setFpNewPw(""); setFpConfirmPw("") }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive border border-destructive/20"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <Button
+                type="submit"
+                className={cn(
+                  "h-12 w-full gap-2 text-base font-black shadow-lg transition-all active:scale-[0.98] rounded-xl text-white",
+                  role === "citizen" ? "bg-[#FF9933] hover:bg-[#FF9933]/90 shadow-[#FF9933]/20" :
+                    role === "officer" ? "bg-[#138808] hover:bg-[#138808]/90 shadow-[#138808]/20" :
+                      "bg-[#2B6CEE] hover:bg-[#2B6CEE]/90 shadow-[#2B6CEE]/20"
+                )}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <>
+                    SIGN IN
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </div>
 
 
 
