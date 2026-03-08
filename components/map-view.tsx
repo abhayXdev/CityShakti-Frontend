@@ -31,36 +31,51 @@ export function MapView() {
             return
         }
 
-        map.current = new maplibregl.Map({
-            container: mapContainer.current,
-            style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${olaApiKey}`,
-            center: [77.2090, 28.6139],
-            zoom: 12,
-            attributionControl: false,
-            transformRequest: (url) => {
-                if (url.includes("api.olamaps.io") && !url.includes("api_key=")) {
-                    const sep = url.includes("?") ? "&" : "?"
-                    return { url: `${url}${sep}api_key=${olaApiKey}` }
+        // Initialize with a slight delay to ensure DOM dimensions are settled
+        const initTimeout = setTimeout(() => {
+            if (!mapContainer.current) return
+
+            map.current = new maplibregl.Map({
+                container: mapContainer.current,
+                style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${olaApiKey}`,
+                center: [77.2090, 28.6139],
+                zoom: 12,
+                attributionControl: false,
+                transformRequest: (url, resourceType) => {
+                    if (url.includes("api.olamaps.io") && !url.includes("api_key=")) {
+                        const sep = url.includes("?") ? "&" : "?"
+                        return { url: `${url}${sep}api_key=${olaApiKey}` }
+                    }
+                    return { url }
                 }
-                return { url }
-            }
-        })
+            })
+
+            map.current.on("load", () => {
+                mapLoadedRef.current = true
+                
+                // Ensure resize is processed after map loads inside the container
+                setTimeout(() => {
+                   map.current?.resize()
+                }, 200)
+
+                // Trigger the marker update now that the map is ready
+                map.current?.fire("data-ready")
+            })
+        }, 100)
 
         // Ensure map resizes correctly if container dimensions change
-        const resizeObserver = new ResizeObserver(() => {
-            map.current?.resize()
-        })
-        resizeObserver.observe(mapContainer.current)
-
-        map.current.on("load", () => {
-            mapLoadedRef.current = true
-            // Trigger the marker update now that the map is ready
-            map.current?.fire("data-ready")
-        })
+        let resizeObserver: ResizeObserver | null = null
+        if (mapContainer.current) {
+            resizeObserver = new ResizeObserver(() => {
+                map.current?.resize()
+            })
+            resizeObserver.observe(mapContainer.current)
+        }
 
         // Only remove map when the component truly unmounts
         return () => {
-            resizeObserver.disconnect()
+            if (resizeObserver) resizeObserver.disconnect()
+            clearTimeout(initTimeout)
             mapLoadedRef.current = false
             map.current?.remove()
             map.current = null
@@ -121,12 +136,12 @@ export function MapView() {
 
             // Fit bounds to complaints
             if (hasValidCoords && map.current) {
-                // Clear any existing maxBounds before panning
+                // IMPORTANT: Clearing previous strict bounds temporarily to allow panning
                 map.current.setMaxBounds(null)
-
-                // Use animate: false to prevent maxBounds from clashing with the pan animation
+                
+                // Do not animate to prevent animation vs maxBounds conflicts that crash canvas rendering
                 map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
-
+                
                 // Lock pan to jurisdiction for non-sudo users
                 if (user?.role !== "sudo") {
                     const sw = bounds.getSouthWest()
