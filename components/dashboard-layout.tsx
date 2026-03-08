@@ -1,6 +1,7 @@
 "use client"
 
 import { useApp } from "@/lib/app-context"
+import { cn } from "@/lib/utils"
 import {
   Shield,
   LayoutDashboard,
@@ -19,7 +20,7 @@ import {
   Map,
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { AnimatePresence } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { PageTransition } from "@/components/page-transition"
 import {
   Sidebar,
@@ -63,6 +64,8 @@ const navItems = [
   { id: "ai", label: "AI Features", icon: BrainCircuit },
 ]
 
+const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+
 export function DashboardLayout() {
   const { user, logout, activeView, setActiveView, notifications } = useApp()
   const { theme, setTheme } = useTheme()
@@ -80,24 +83,28 @@ export function DashboardLayout() {
 
   return (
     <SidebarProvider>
-      <Sidebar variant="sidebar" collapsible="icon">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF9933] to-[#FFB366] text-white shadow-lg shadow-orange-500/20">
-              <Shield className="h-5 w-5" />
-            </div>
+      <Sidebar variant="sidebar" collapsible="icon" className="border-r border-stone-200 dark:border-stone-800">
+        <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+        <SidebarHeader className="p-6 relative z-10">
+          <div className="flex items-center gap-4 group-data-[collapsible=icon]:justify-center">
+            <motion.div
+              whileHover={{ rotate: 10, scale: 1.1 }}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF9933] to-[#F4B400] text-white shadow-xl shadow-orange-500/30"
+            >
+              <Shield className="h-6 w-6" />
+            </motion.div>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-bold text-sidebar-foreground leading-tight">
-                SCMS
+              <span className="text-xl font-black text-[#0a0e1a] dark:text-white leading-none tracking-tighter">
+                JAN<span className="text-[#FF9933]">SETU</span>
               </span>
-              <span className="text-xs text-sidebar-foreground/60">
-                Civic Monitoring
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mt-1">
+                Command Center
               </span>
             </div>
           </div>
         </SidebarHeader>
 
-        <Separator className="bg-sidebar-border mx-0 w-full" />
+        <Separator className="bg-stone-200/50 dark:bg-stone-800/50 mx-4 w-auto" />
 
         <SidebarContent>
           <SidebarGroup>
@@ -112,14 +119,19 @@ export function DashboardLayout() {
                       isActive={activeView === item.id}
                       onClick={() => setActiveView(item.id)}
                       tooltip={item.label}
-                      className="gap-3"
+                      className={cn(
+                        "gap-3 h-11 px-4 rounded-xl transition-all duration-300",
+                        activeView === item.id
+                          ? "bg-gradient-to-r from-[#FF9933]/15 to-transparent text-[#FF9933] font-bold shadow-none border-l-4 border-[#FF9933] rounded-l-none"
+                          : "hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400"
+                      )}
                     >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
+                      <item.icon className={cn("h-4 w-4 transition-transform duration-300", activeView === item.id ? "scale-110" : "group-hover:scale-110")} />
+                      <span className="text-sm tracking-tight">{item.label}</span>
                       {item.id === "notifications" && unreadCount > 0 && (
                         <Badge
                           variant="destructive"
-                          className="ml-auto h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px] group-data-[collapsible=icon]:hidden"
+                          className="ml-auto h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px] bg-[#FF9933] text-white border-none group-data-[collapsible=icon]:hidden shadow-lg shadow-orange-500/20"
                         >
                           {unreadCount}
                         </Badge>
@@ -176,28 +188,35 @@ export function DashboardLayout() {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-white/70 backdrop-blur-md px-4 dark:bg-black/40">
-          <SidebarTrigger>
-            <ChevronLeft className="h-4 w-4" />
+      <SidebarInset className="bg-[#fdfdfd] dark:bg-[#0a0e1a]">
+        <header className="sticky top-0 z-20 flex h-20 items-center gap-4 border-b border-stone-200/50 bg-white/70 backdrop-blur-2xl px-8 dark:bg-stone-900/60 dark:border-stone-800/50">
+          <SidebarTrigger className="hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors h-10 w-10">
+            <ChevronLeft className="h-5 w-5" />
           </SidebarTrigger>
-          <Separator orientation="vertical" className="h-5" />
+          <Separator orientation="vertical" className="h-6 bg-stone-200 dark:bg-stone-800" />
           <div className="flex flex-1 items-center justify-between">
-            <h1 className="text-sm font-semibold text-foreground capitalize">
-              {filteredNavItems.find((n) => n.id === activeView)?.label ?? "Dashboard"}
-            </h1>
-            <div className="flex items-center gap-2">
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                {new Date().toLocaleDateString("en-IN", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+            <div className="flex flex-col">
+              <h1 className="text-lg font-black text-stone-900 dark:text-white capitalize tracking-tight">
+                {filteredNavItems.find((n) => n.id === activeView)?.label ?? "Dashboard"}
+              </h1>
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest leading-none mt-1">
+                JanSetu Portal
               </span>
-              <Badge variant="outline" className="text-[10px]">
-                {user?.role === "sudo" ? "Admin Department Access" :
-                  user?.role === "officer" ? "Officer Access" : "Citizen Access"}
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="hidden lg:flex flex-col items-end mr-2">
+                <span className="text-xs font-bold text-stone-900 dark:text-stone-100">
+                  {new Date().toLocaleDateString("en-IN", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </span>
+                <span className="text-[10px] text-stone-400 font-medium">Digital India Initiative</span>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1 rounded-full shadow-sm">
+                {user?.role === "sudo" ? "Master Command" :
+                  user?.role === "officer" ? "Officer Portal" : "Citizen Portal"}
               </Badge>
             </div>
           </div>

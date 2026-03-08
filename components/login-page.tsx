@@ -166,7 +166,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                   id="username"
                   type="text"
                   placeholder={
-                    role === "sudo" ? "sudo@cityshakti.com"
+                    role === "sudo" ? "sudo@JanSetu.com"
                       : role === "officer" ? "officer@example.com"
                         : "citizen@example.com"
                   }

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import { useApp } from "@/lib/app-context"
 import { getStats, type ComplaintDetail, type Complaint } from "@/lib/data"
 import { getComplaintDetailApi, getPendingOfficersApi, approveOfficerApi, rejectOfficerApi, deleteOfficerApi, getAdminDirectoryApi, suspendOfficerApi, unsuspendOfficerApi } from "@/lib/api"
@@ -21,6 +22,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import confetti from "canvas-confetti"
 import {
   Table,
   TableBody,
@@ -84,18 +86,20 @@ function AnimatedCounter({ target, duration = 1200 }: { target: number; duration
   return <span>{count.toLocaleString()}</span>
 }
 
+const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+
 const priorityColors = {
-  high: "bg-destructive/10 text-destructive border-destructive/20",
-  medium: "bg-warning/10 text-warning-foreground border-warning/20",
-  low: "bg-success/10 text-success border-success/20",
+  high: "bg-[#FF9933]/10 text-[#FF9933] border-[#FF9933]/20",
+  medium: "bg-[#F4B400]/10 text-[#F4B400] border-[#F4B400]/20",
+  low: "bg-[#2B6CEE]/10 text-[#2B6CEE] border-[#2B6CEE]/20",
 }
 
 const statusColors = {
-  pending: "bg-muted text-muted-foreground",
-  "in-progress": "bg-chart-1/10 text-chart-1",
-  resolved: "bg-success/10 text-success",
-  escalated: "bg-destructive/10 text-destructive",
-  closed: "bg-success/20 text-success font-semibold border-success/30",
+  pending: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
+  "in-progress": "bg-[#2B6CEE]/10 text-[#2B6CEE]",
+  resolved: "bg-[#F4B400]/10 text-[#F4B400]",
+  escalated: "bg-red-500/10 text-red-500",
+  closed: "bg-[#138808]/20 text-[#138808] font-semibold border-[#138808]/30",
 }
 
 export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?: boolean }) {
@@ -357,280 +361,312 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
     <div className="flex flex-col gap-6">
       {/* Stat cards (Admin Only) */}
       {!isCitizen ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {statCards.map((stat) => (
-            <Card
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map((stat, idx) => (
+            <motion.div
               key={stat.title}
-              className="group relative overflow-hidden transition-all hover:shadow-md"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ y: -5 }}
             >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      {stat.title}
-                    </span>
-                    <span className="text-3xl font-bold text-foreground tabular-nums">
-                      <AnimatedCounter target={stat.value} />
-                    </span>
+              <Card
+                className="group relative overflow-hidden border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-[#FF9933]/10 hover:shadow-2xl"
+              >
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between relative z-10">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">
+                        {stat.title}
+                      </span>
+                      <span className="text-4xl font-extrabold text-[#0a0e1a] dark:text-white tabular-nums">
+                        <AnimatedCounter target={stat.value} />
+                      </span>
+                    </div>
+                    <div className={cn("rounded-2xl p-3 shadow-xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6",
+                      stat.title === "Total Complaints" ? "bg-gradient-to-br from-[#FF9933] to-[#F4B400] text-white shadow-[#FF9933]/20" :
+                        stat.title === "Resolved" ? "bg-gradient-to-br from-[#138808] to-[#22c55e] text-white shadow-green-500/20" :
+                          stat.title === "Escalated" ? "bg-gradient-to-br from-red-500 to-orange-600 text-white shadow-red-500/20" :
+                            "bg-gradient-to-br from-[#2B6CEE] to-indigo-600 text-white shadow-blue-500/20"
+                    )}>
+                      <stat.icon className="h-6 w-6" />
+                    </div>
                   </div>
-                  <div className={cn("rounded-xl p-2.5 bg-gradient-to-br shadow-lg",
-                    stat.title === "Total Complaints" ? "from-[#FF9933] to-[#FFB366] text-white" :
-                      stat.title === "Resolved" ? "from-[#138808] to-[#22c55e] text-white" :
-                        stat.title === "Escalated" ? "from-red-500 to-red-600 text-white" :
-                          "from-blue-500 to-blue-600 text-white"
-                  )}>
-                    <stat.icon className="h-5 w-5" />
+                  <div className="mt-4 flex items-center gap-2 relative z-10">
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold",
+                        stat.trendUp ? "bg-green-100 text-green-700 dark:bg-green-900/30" : "bg-red-100 text-red-700 dark:bg-red-900/30"
+                      )}
+                    >
+                      {stat.trendUp ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : (
+                        <ArrowUpRight className="h-3 w-3 rotate-90" />
+                      )}
+                      {stat.trend}
+                    </div>
+                    <span className="text-[10px] font-medium text-stone-400 uppercase tracking-tighter">vs last month</span>
                   </div>
-                </div>
-                <div className="mt-3 flex items-center gap-1.5">
-                  <div
-                    className={cn(
-                      "flex items-center gap-0.5 text-xs font-medium",
-                      stat.trendUp ? "text-success" : "text-destructive"
-                    )}
-                  >
-                    {stat.trendUp ? (
-                      <TrendingUp className="h-3 w-3" />
-                    ) : (
-                      <ArrowUpRight className="h-3 w-3 rotate-90" />
-                    )}
-                    {stat.trend}
-                  </div>
-                  <span className="text-xs text-muted-foreground">vs last month</span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           {!isTrackingOnly && (
-            <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-[#FF9933]/15 via-white/80 to-[#138808]/15 p-8 md:p-12 shadow-xl backdrop-blur-md mb-6 dark:from-[#FF9933]/10 dark:via-black/40 dark:to-[#138808]/10">
-              <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-                <Shield className="w-64 h-64 text-[#FF9933]" />
-              </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative overflow-hidden rounded-3xl border-none bg-[#0a0e1a] p-8 md:p-14 shadow-2xl transition-all duration-700 hover:shadow-[#FF9933]/10"
+            >
+              {/* Animated background elements */}
+              <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF9933]/20 blur-[120px] -mr-32 -mt-32 rounded-full animate-pulse" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#138808]/10 blur-[100px] -ml-24 -mb-24 rounded-full" />
+              <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay" style={{ backgroundImage: RANGOLI_PATTERN, backgroundSize: '200px' }} />
+
               <div className="relative z-10 max-w-2xl">
-                <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-                  Welcome back, <span className="text-primary">{user?.name}</span>
-                </h1>
-                <p className="text-lg text-muted-foreground mb-8 text-balance">
-                  The Smart Civic Monitoring System ensures your reports are automatically assigned to the correct administrative department. Help keep our city clean and safe.
-                </p>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="gradient" size="lg" className="h-14 px-8 text-base font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
-                      <Plus className="mr-2 h-5 w-5" />
-                      Make a New Complaint
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <form onSubmit={handleSubmitComplaint}>
-                      <DialogHeader>
-                        <DialogTitle>File a New Complaint</DialogTitle>
-                        <DialogDescription>
-                          Describe the issue in detail. It will be analyzed by AI and assigned to the relevant department.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="title">Complaint Title</Label>
-                          <Input
-                            id="title"
-                            placeholder="e.g., Severe road damage on Main Street"
-                            required
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 text-white uppercase italic">
+                    Welcome, <span className="text-[#FF9933] drop-shadow-sm">{user?.name}</span>
+                  </h1>
+                </motion.div>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-lg text-stone-400 mb-10 text-balance leading-relaxed font-medium"
+                >
+                  The <span className="text-white font-bold tracking-widest text-sm bg-white/10 px-2 py-0.5 rounded ml-1 mr-1">JANSETU SMART MONITORING</span> ensures your reports are automatically assigned to the correct administrative department. Help keep our city clean and safe.
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="lg" className="h-16 px-10 text-base font-black shadow-2xl bg-[#FF9933] hover:bg-[#FF9933]/90 text-white rounded-2xl shadow-[#FF9933]/30 active:scale-95 transition-all group overflow-hidden relative">
+                        <span className="relative z-10 flex items-center gap-3">
+                          <Plus className="h-6 w-6 stroke-[3px]" />
+                          REPORT NEW ISSUE
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <form onSubmit={handleSubmitComplaint}>
+                        <DialogHeader>
+                          <DialogTitle>File a New Complaint</DialogTitle>
+                          <DialogDescription>
+                            Describe the issue in detail. It will be analyzed by AI and assigned to the relevant department.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
                           <div className="grid gap-2">
-                            <Label htmlFor="category">Category</Label>
-                            <Select
+                            <Label htmlFor="title">Complaint Title</Label>
+                            <Input
+                              id="title"
+                              placeholder="e.g., Severe road damage on Main Street"
                               required
-                              value={formData.category}
-                              onValueChange={(val) => setFormData({ ...formData, category: val })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Roads & Transport">Roads & Transport</SelectItem>
-                                <SelectItem value="Sanitation">Sanitation</SelectItem>
-                                <SelectItem value="Water">Water Supply</SelectItem>
-                                <SelectItem value="Electricity">Electricity</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
+                              value={formData.title}
+                              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            />
                           </div>
-                          <div className="grid gap-2 border border-primary/10 bg-primary/5 rounded-md p-3">
-                            <Label className="text-sm font-semibold flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-primary" /> Smart Routing
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                              This complaint will automatically be assigned to the department responsible for your precise incident location.
-                            </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="category">Category</Label>
+                              <Select
+                                required
+                                value={formData.category}
+                                onValueChange={(val) => setFormData({ ...formData, category: val })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Roads & Transport">Roads & Transport</SelectItem>
+                                  <SelectItem value="Sanitation">Sanitation</SelectItem>
+                                  <SelectItem value="Water">Water Supply</SelectItem>
+                                  <SelectItem value="Electricity">Electricity</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="grid gap-2 border border-primary/10 bg-primary/5 rounded-md p-3">
+                              <Label className="text-sm font-semibold flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-primary" /> Smart Routing
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                This complaint will automatically be assigned to the department responsible for your precise incident location.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="description">Detailed Description</Label>
+                            <Textarea
+                              id="description"
+                              placeholder="Provide specific details, landmarks, and context to assist field officers..."
+                              required
+                              className="min-h-[100px] resize-none"
+                              value={formData.description}
+                              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="photo">Attach Image (Optional)</Label>
+                            <Input
+                              id="photo"
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  setSelectedFile(e.target.files[0])
+                                }
+                              }}
+                            />
+                            {selectedFile && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Selected: {selectedFile.name}
+                              </p>
+                            )}
+                          </div>
+                          <div className="grid gap-2">
+                            <div className="flex items-center justify-between">
+                              <Label>Precise Location <span className="text-destructive">*</span></Label>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full h-11 flex gap-2 items-center justify-center bg-background shadow-sm"
+                                onClick={handleGetLocation}
+                              >
+                                <MapPin className="h-4 w-4 text-primary" />
+                                {formData.latitude && formData.longitude ? "Update Location" : "Get Current Location"}
+                              </Button>
+                            </div>
+                            {formData.latitude && formData.longitude ? (
+                              <p className="text-xs text-success bg-success/10 px-3 py-1.5 rounded-md mt-1 border border-success/20 flex items-center justify-between">
+                                <span>Location Captured Successfully</span>
+                                <span className="font-mono text-[10px] opacity-70">{formData.latitude}, {formData.longitude}</span>
+                              </p>
+                            ) : (
+                              <p className="text-xs text-destructive bg-destructive/10 px-3 py-1.5 rounded-md mt-1 border border-destructive/20 flex items-center justify-between">
+                                <span>Location is required to file a report.</span>
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="description">Detailed Description</Label>
-                          <Textarea
-                            id="description"
-                            placeholder="Provide specific details, landmarks, and context to assist field officers..."
-                            required
-                            className="min-h-[100px] resize-none"
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="photo">Attach Image (Optional)</Label>
-                          <Input
-                            id="photo"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files.length > 0) {
-                                setSelectedFile(e.target.files[0])
-                              }
-                            }}
-                          />
-                          {selectedFile && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Selected: {selectedFile.name}
-                            </p>
-                          )}
-                        </div>
-                        <div className="grid gap-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Precise Location <span className="text-destructive">*</span></Label>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full h-11 flex gap-2 items-center justify-center bg-background shadow-sm"
-                              onClick={handleGetLocation}
-                            >
-                              <MapPin className="h-4 w-4 text-primary" />
-                              {formData.latitude && formData.longitude ? "Update Location" : "Get Current Location"}
-                            </Button>
-                          </div>
-                          {formData.latitude && formData.longitude ? (
-                            <p className="text-xs text-success bg-success/10 px-3 py-1.5 rounded-md mt-1 border border-success/20 flex items-center justify-between">
-                              <span>Location Captured Successfully</span>
-                              <span className="font-mono text-[10px] opacity-70">{formData.latitude}, {formData.longitude}</span>
-                            </p>
-                          ) : (
-                            <p className="text-xs text-destructive bg-destructive/10 px-3 py-1.5 rounded-md mt-1 border border-destructive/20 flex items-center justify-between">
-                              <span>Location is required to file a report.</span>
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting || uploadingImage}>
-                          Cancel
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting || uploadingImage || !formData.latitude || !formData.longitude}>
-                          {isSubmitting || uploadingImage ? "Uploading & Submitting..." : "Submit Complaint"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {!isTrackingOnly && (
-            <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Card className="shadow-sm">
-                  <CardContent className="p-5 flex flex-col gap-1">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">My Complaints</span>
-                    <span className="text-3xl font-bold text-foreground">{complaints.length}</span>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm">
-                  <CardContent className="p-5 flex flex-col gap-1">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pending</span>
-                    <span className="text-3xl font-bold text-chart-4">{complaints.filter(c => c.status === 'pending').length}</span>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm">
-                  <CardContent className="p-5 flex flex-col gap-1">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Resolved</span>
-                    <span className="text-3xl font-bold text-success">{complaints.filter(c => c.status === 'resolved' || c.status === 'closed').length}</span>
-                  </CardContent>
-                </Card>
-              </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="flex flex-col gap-6"
+          >
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                <CardContent className="p-6 flex flex-col gap-1 relative z-10">
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">My Complaints</span>
+                  <span className="text-4xl font-extrabold text-[#0a0e1a] dark:text-white tabular-nums group-hover:text-[#FF9933] transition-colors duration-300">{complaints.length}</span>
+                </CardContent>
+              </Card>
+              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                <CardContent className="p-6 flex flex-col gap-1 relative z-10">
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Pending</span>
+                  <span className="text-4xl font-extrabold text-[#2B6CEE] tabular-nums">{complaints.filter(c => c.status === 'pending').length}</span>
+                </CardContent>
+              </Card>
+              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-lg dark:bg-stone-900/60 dark:border dark:border-stone-800 transition-all duration-500 hover:shadow-xl group overflow-hidden">
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                <CardContent className="p-6 flex flex-col gap-1 relative z-10">
+                  <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Resolved</span>
+                  <span className="text-4xl font-extrabold text-[#138808] tabular-nums">{complaints.filter(c => c.status === 'resolved' || c.status === 'closed').length}</span>
+                </CardContent>
+              </Card>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-2 bg-gradient-to-r from-card to-card/50 border-b">
-                    <CardTitle className="text-base font-semibold">Total Problems per Day</CardTitle>
-                    <p className="text-xs text-muted-foreground">Frequency of issues reported (Last 14 days)</p>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-6">
-                    <div className="h-[250px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={dailyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorComplaints" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
-                          <Tooltip
-                            contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))' }}
-                            itemStyle={{ fontSize: '13px', paddingTop: '4px' }}
-                            labelStyle={{ fontWeight: 'bold', color: 'hsl(var(--foreground))', marginBottom: '4px' }}
-                          />
-                          <Area type="monotone" dataKey="complaints" name="Total Filed" stroke="var(--primary)" fillOpacity={1} fill="url(#colorComplaints)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 overflow-hidden relative group transition-all duration-500 hover:shadow-[#FF9933]/10">
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                <CardHeader className="pb-2 relative z-10">
+                  <CardTitle className="text-base font-bold bg-gradient-to-r from-[#0a0e1a] to-stone-600 bg-clip-text text-transparent dark:from-white dark:to-stone-400">Total Problems per Day</CardTitle>
+                  <p className="text-xs text-stone-500 font-medium tracking-tight">Frequency of issues reported (Last 14 days)</p>
+                </CardHeader>
+                <CardContent className="p-6 pt-2 relative z-10">
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dailyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorComplaints" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#FF9933" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#FF9933" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-stone-200 dark:stroke-stone-800" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 500 }} className="fill-stone-500" dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 500 }} className="fill-stone-500" allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                          itemStyle={{ fontSize: '13px', paddingTop: '4px', fontWeight: 'bold' }}
+                          labelStyle={{ fontWeight: 'black', color: '#0a0e1a', marginBottom: '4px' }}
+                        />
+                        <Area type="monotone" dataKey="complaints" name="Total Filed" stroke="#FF9933" strokeWidth={3} fillOpacity={1} fill="url(#colorComplaints)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card>
-                  <CardHeader className="pb-2 bg-gradient-to-r from-card to-card/50 border-b">
-                    <CardTitle className="text-base font-semibold">Problems Resolved per Day</CardTitle>
-                    <p className="text-xs text-muted-foreground">Resolution velocity (Last 14 days)</p>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-6">
-                    <div className="h-[250px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={dailyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
-                          <Tooltip
-                            contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))' }}
-                            itemStyle={{ fontSize: '13px', paddingTop: '4px' }}
-                            labelStyle={{ fontWeight: 'bold', color: 'hsl(var(--foreground))', marginBottom: '4px' }}
-                          />
-                          <Area type="monotone" dataKey="resolved" name="Resolved" stroke="#22c55e" fillOpacity={1} fill="url(#colorResolved)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
-          )
-          }
-
-        </div >
+              <Card className="border-none bg-white/70 backdrop-blur-xl shadow-xl dark:bg-stone-900/60 dark:border dark:border-stone-800 overflow-hidden relative group transition-all duration-500 hover:shadow-[#F4B400]/10">
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                <CardHeader className="pb-2 relative z-10">
+                  <CardTitle className="text-base font-bold bg-gradient-to-r from-[#0a0e1a] to-stone-600 bg-clip-text text-transparent dark:from-white dark:to-stone-400">Problems Resolved per Day</CardTitle>
+                  <p className="text-xs text-stone-500 font-medium tracking-tight">Resolution velocity (Last 14 days)</p>
+                </CardHeader>
+                <CardContent className="p-6 pt-2 relative z-10">
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dailyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#F4B400" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#F4B400" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-stone-200 dark:stroke-stone-800" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 500 }} className="fill-stone-500" dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 500 }} className="fill-stone-500" allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                          itemStyle={{ fontSize: '13px', paddingTop: '4px', fontWeight: 'bold' }}
+                          labelStyle={{ fontWeight: 'black', color: '#0a0e1a', marginBottom: '4px' }}
+                        />
+                        <Area type="monotone" dataKey="resolved" name="Resolved" stroke="#F4B400" strokeWidth={3} fillOpacity={1} fill="url(#colorResolved)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+        </div>
       )}
 
       {/* Recent complaints table */}
@@ -1119,7 +1155,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   )
 
   function renderComplaintTable(data: Complaint[]) {

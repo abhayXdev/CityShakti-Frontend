@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion } from "motion/react"
 import { useApp } from "@/lib/app-context"
 import { type Complaint, type ComplaintDetail } from "@/lib/data"
 import { getComplaintDetailApi } from "@/lib/api"
+import confetti from "canvas-confetti"
 import {
     Card,
     CardContent,
@@ -34,17 +36,19 @@ import { CheckCircle2, ChevronUp, MapPin, Building2, UserCircle2, Clock, Maximiz
 import { formatDistanceToNow, isPast, format } from "date-fns"
 import { cn } from "@/lib/utils"
 
+const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+
 const priorityColors: Record<string, string> = {
-    high: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200",
-    medium: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200",
-    low: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200",
+    high: "bg-[#FF9933]/10 text-[#FF9933] border-[#FF9933]/20",
+    medium: "bg-[#F4B400]/10 text-[#F4B400] border-[#F4B400]/20",
+    low: "bg-[#2B6CEE]/10 text-[#2B6CEE] border-[#2B6CEE]/20",
 }
 
 const statusColors: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    "in-progress": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    resolved: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    escalated: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    pending: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
+    "in-progress": "bg-[#2B6CEE]/15 text-[#2B6CEE] dark:bg-[#2B6CEE]/10",
+    resolved: "bg-[#F4B400]/15 text-[#F4B400] dark:bg-[#F4B400]/10",
+    escalated: "bg-red-500/15 text-red-500",
 }
 
 export function CommunityView() {
@@ -93,6 +97,12 @@ export function CommunityView() {
         try {
             const success = await upvoteComplaint(selectedComplaintId)
             if (success) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ["#FF9933", "#F4B400", "#2B6CEE"],
+                })
                 // Optimistically update the detailed view's vote count
                 setComplaintDetail({
                     ...complaintDetail,
@@ -119,97 +129,99 @@ export function CommunityView() {
     }
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-bold tracking-tight">Community Issues</h2>
-                <p className="text-muted-foreground">
-                    View and support public complaints raised by citizens in <strong className="text-foreground">{(user as any)?.ward}</strong>.
-                </p>
+        <div className="flex flex-col gap-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-3xl font-black tracking-tighter text-[#0a0e1a] dark:text-white uppercase italic">
+                        Community <span className="text-[#FF9933]">Pulse</span>
+                    </h2>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-[0.3em]">
+                        Your voice in <strong className="text-[#FF9933]">{(user as any)?.ward}</strong> Area
+                    </p>
+                </div>
+                <div className="flex items-center gap-2 bg-stone-100 dark:bg-stone-900 p-1 rounded-xl border border-stone-200/50 dark:border-stone-800/50">
+                    <Badge variant="outline" className="text-[10px] font-bold border-none text-stone-500 uppercase">
+                        {recentWardComplaints.length} Active Issues
+                    </Badge>
+                </div>
             </div>
 
-            <Card>
-                <CardHeader className="pb-3 border-b">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-semibold">
-                            Recent Issues in {(user as any)?.ward || "Your Area"}
-                        </CardTitle>
+            {recentWardComplaints.length === 0 ? (
+                <Card className="p-12 text-center border-dashed border-2 border-stone-200 dark:border-stone-800 bg-transparent">
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="h-12 w-12 rounded-full bg-stone-100 dark:bg-stone-900 flex items-center justify-center text-stone-400">
+                            <CheckCircle2 className="h-6 w-6" />
+                        </div>
+                        <p className="text-sm font-bold text-stone-500 uppercase tracking-widest mt-2">
+                            No public complaints found in your area.
+                        </p>
+                        <p className="text-xs text-stone-400">Be the first to report an issue in {(user as any)?.ward || "your ward"}.</p>
                     </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        {recentWardComplaints.length === 0 ? (
-                            <div className="p-8 text-center text-muted-foreground text-sm">
-                                No public complaints found in your area.
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="text-xs">ID</TableHead>
-                                        <TableHead className="text-xs">Complaint</TableHead>
-                                        <TableHead className="text-xs">Votes</TableHead>
-                                        <TableHead className="text-xs">Priority</TableHead>
-                                        <TableHead className="text-xs">Status</TableHead>
-                                        <TableHead className="text-xs hidden lg:table-cell">Date</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {recentWardComplaints.map((complaint) => (
-                                        <TableRow
-                                            key={complaint.id}
-                                            className="cursor-pointer hover:bg-muted/50 transition-colors group"
-                                            onClick={() => handleOpenComplaint(complaint.id)}
-                                        >
-                                            <TableCell className="font-mono text-xs text-muted-foreground">
-                                                #{complaint.id.substring(0, 4)}
-                                            </TableCell>
-                                            <TableCell className="max-w-[200px] text-sm py-3">
-                                                <p className="font-medium truncate">{complaint.title}</p>
-                                                <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
-                                                    <MapPin className="h-3 w-3" />
-                                                    {complaint.location.area}
-                                                </p>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="secondary" className="text-[10px] tabular-nums font-mono">
+                </Card>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {recentWardComplaints.map((complaint, idx) => (
+                        <motion.div
+                            key={complaint.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            whileHover={{ y: -5 }}
+                            className="group cursor-pointer"
+                            onClick={() => handleOpenComplaint(complaint.id)}
+                        >
+                            <Card className="relative h-full overflow-hidden border-none bg-white/80 backdrop-blur-xl shadow-xl dark:bg-stone-900/80 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-[#FF9933]/10 dark:border dark:border-stone-800/50">
+                                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: RANGOLI_PATTERN }} />
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF9933]/20 to-transparent blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                                <CardHeader className="pb-3 relative z-10">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-stone-200 dark:border-stone-800 font-mono">
+                                            #{complaint.id.substring(0, 5)}
+                                        </Badge>
+                                        <Badge className={cn("text-[9px] font-black uppercase tracking-widest border-0", statusColors[complaint.status])}>
+                                            {complaint.status}
+                                        </Badge>
+                                    </div>
+                                    <CardTitle className="text-lg font-black text-stone-900 dark:text-white leading-tight group-hover:text-[#FF9933] transition-colors line-clamp-2">
+                                        {complaint.title}
+                                    </CardTitle>
+                                </CardHeader>
+
+                                <CardContent className="space-y-4 relative z-10">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-stone-400 uppercase tracking-wider">
+                                            <MapPin className="h-3 w-3 text-[#FF9933]" />
+                                            <span className="truncate">{complaint.location.area}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                                            <Clock className="h-3 w-3" />
+                                            {formatDistanceToNow(new Date(complaint.createdAt), { addSuffix: true })}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-stone-800/50">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#FF9933] to-[#F4B400] flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+                                                <ChevronUp className="h-4 w-4" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-black text-stone-900 dark:text-white leading-none">
                                                     {complaint.upvotes || 0}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "text-[10px] capitalize",
-                                                        priorityColors[complaint.priority]
-                                                    )}
-                                                >
-                                                    {complaint.priority}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    className={cn(
-                                                        "text-[10px] capitalize border-0",
-                                                        statusColors[complaint.status]
-                                                    )}
-                                                >
-                                                    {complaint.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">
-                                                {new Date(complaint.createdAt).toLocaleDateString("en-IN", {
-                                                    day: "2-digit",
-                                                    month: "short",
-                                                })}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+                                                </span>
+                                                <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Supports</span>
+                                            </div>
+                                        </div>
+                                        <Badge variant="outline" className={cn("text-[9px] font-black uppercase tracking-widest px-3 py-1", priorityColors[complaint.priority])}>
+                                            {complaint.priority}
+                                        </Badge>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    ))}
+                </div>
+            )}
 
             {/* Complaint Detail Dialog */}
             <Dialog open={!!selectedComplaintId} onOpenChange={(open) => !open && setSelectedComplaintId(null)}>
