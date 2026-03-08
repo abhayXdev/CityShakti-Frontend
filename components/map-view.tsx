@@ -158,6 +158,55 @@ export function MapView() {
                     )
                     map.current.setMaxBounds(elasticBounds)
                     map.current.setMinZoom(8)
+
+                    // Draw the visible jurisdictional boundary rectangle
+                    const bSW = elasticBounds.getSouthWest()
+                    const bNE = elasticBounds.getNorthEast()
+                    const boundaryGeoJSON: GeoJSON.Feature<GeoJSON.Polygon> = {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [[
+                                [bSW.lng, bSW.lat],
+                                [bNE.lng, bSW.lat],
+                                [bNE.lng, bNE.lat],
+                                [bSW.lng, bNE.lat],
+                                [bSW.lng, bSW.lat],
+                            ]]
+                        },
+                        properties: {}
+                    }
+
+                    // Remove old boundary layers/source if they exist (for re-renders)
+                    if (map.current.getLayer('boundary-fill')) map.current.removeLayer('boundary-fill')
+                    if (map.current.getLayer('boundary-outline')) map.current.removeLayer('boundary-outline')
+                    if (map.current.getSource('boundary-region')) map.current.removeSource('boundary-region')
+
+                    map.current.addSource('boundary-region', { type: 'geojson', data: boundaryGeoJSON })
+
+                    // Semi-transparent saffron fill
+                    map.current.addLayer({
+                        id: 'boundary-fill',
+                        type: 'fill',
+                        source: 'boundary-region',
+                        paint: {
+                            'fill-color': '#FF9933',
+                            'fill-opacity': 0.04,
+                        }
+                    })
+
+                    // Dashed saffron border
+                    map.current.addLayer({
+                        id: 'boundary-outline',
+                        type: 'line',
+                        source: 'boundary-region',
+                        paint: {
+                            'line-color': '#FF9933',
+                            'line-width': 2,
+                            'line-opacity': 0.6,
+                            'line-dasharray': [4, 3],
+                        }
+                    })
                 }
             }
         }
