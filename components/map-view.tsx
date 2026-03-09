@@ -93,6 +93,7 @@ export function MapView() {
 
     // ─── Effect 2: Update markers when sourceData changes, WITHOUT touching the map ───
     useEffect(() => {
+        // Effect 2: Update markers and set initial bounds when sourceData or map changes
         const placeMarkers = () => {
             if (!map.current || !mapLoadedRef.current) return
 
@@ -155,62 +156,63 @@ export function MapView() {
                 markersRef.current.push(marker)
             })
 
-            // Fit bounds to complaints only on initial load or if not yet initialized
-            if (hasValidCoords && map.current && !boundsInitializedRef.current) {
-                boundsInitializedRef.current = true
+            // Only attempt bounds logic if we haven't already and the user profile has loaded
+            if (!boundsInitializedRef.current && user) {
+                if (hasValidCoords && map.current) {
+                    boundsInitializedRef.current = true
+                    map.current.setMaxBounds(null)
 
-                // IMPORTANT: Clearing previous strict bounds temporarily to allow panning
-                map.current.setMaxBounds(null)
+                    // Fit to initial data instantly (no animation) to avoid bounds constraint conflicts crashing the camera
+                    map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
 
-                // Fit to initial data instantly (no animation) to avoid bounds constraint conflicts crashing the camera
-                map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
+                    // Restriction Logic for Citizens/Officers
+                    if (user.role !== "sudo") {
+                        const sw = bounds.getSouthWest()
+                        const ne = bounds.getNorthEast()
 
-                // Restriction Logic for Citizens/Officers
-                if (user?.role !== "sudo") {
-                    // Calculate Elastic Bounding Box with 80% padding (extra generous to avoid "stuck" feeling)
-                    const sw = bounds.getSouthWest()
-                    const ne = bounds.getNorthEast()
+                        const latDiff = Math.max(Math.abs(ne.lat - sw.lat), 0.05)
+                        const lngDiff = Math.max(Math.abs(ne.lng - sw.lng), 0.05)
 
-                    const latDiff = Math.max(Math.abs(ne.lat - sw.lat), 0.05)
-                    const lngDiff = Math.max(Math.abs(ne.lng - sw.lng), 0.05)
-
-                    const elasticBounds = new maplibregl.LngLatBounds(
-                        [sw.lng - lngDiff * 0.8, sw.lat - latDiff * 0.8],
-                        [ne.lng + lngDiff * 0.8, ne.lat + latDiff * 0.8]
-                    )
-
-                    // Defer applying the restrictive bounds to ensure the jump completely resolves first
-                    setTimeout(() => {
-                        if (map.current) {
-                            map.current.setMaxBounds(elasticBounds)
-                            map.current.setMinZoom(9)
-                        }
-                    }, 500)
-                }
-            } else if (!hasValidCoords && map.current && user?.ward && !boundsInitializedRef.current) {
-                // FALLBACK: If there are no points, but the user has a ward (pincode), geocode it so the map doesn't show all of India
-                boundsInitializedRef.current = true
-                map.current.setMaxBounds(null)
-
-                const olaApiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
-                fetch(`https://api.olamaps.io/places/v1/geocode?address=${user.ward}&api_key=${olaApiKey}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.geocodingResults && data.geocodingResults.length > 0) {
-                            const location = data.geocodingResults[0].geometry.location
-                            map.current?.flyTo({ center: [location.lng, location.lat], zoom: 12, essential: true })
-
-                            if (user.role !== "sudo") {
-                                const elasticBounds = new maplibregl.LngLatBounds(
-                                    [location.lng - 0.1, location.lat - 0.1],
-                                    [location.lng + 0.1, location.lat + 0.1]
-                                )
-                                map.current?.setMaxBounds(elasticBounds)
-                                map.current?.setMinZoom(10)
+                        const elasticBounds = new maplibregl.LngLatBounds(
+                            [sw.lng - lngDiff * 0.8, sw.lat - latDiff * 0.8],
+                            [ne.lng + lngDiff * 0.8, ne.lat + latDiff * 0.8]
+                        )
+                        setTimeout(() => {
+                            if (map.current) {
+                                map.current.setMaxBounds(elasticBounds)
+                                map.current.setMinZoom(9)
                             }
-                        }
-                    })
-                    .catch(err => console.error("Could not geocode fallback ward:", err))
+                        }, 500)
+                    }
+                } else if (!hasValidCoords && map.current && user.ward) {
+                    // FALLBACK: User has a ward but no valid points. Geocode ward instead.
+                    boundsInitializedRef.current = true
+                    map.current.setMaxBounds(null)
+
+                    const olaApiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
+                    fetch(`https://api.olamaps.io/places/v1/geocode?address=${user.ward}&api_key=${olaApiKey}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.geocodingResults && data.geocodingResults.length > 0) {
+                                const location = data.geocodingResults[0].geometry.location
+                                map.current?.flyTo({ center: [location.lng, location.lat], zoom: 12, essential: true })
+
+                                if (user.role !== "sudo") {
+                                    const elasticBounds = new maplibregl.LngLatBounds(
+                                        [location.lng - 0.1, location.lat - 0.1],
+                                        [location.lng + 0.1, location.lat + 0.1]
+                                    )
+                                    setTimeout(() => {
+                                        if (map.current) {
+                                            map.current.setMaxBounds(elasticBounds)
+                                            map.current.setMinZoom(10)
+                                        }
+                                    }, 500)
+                                }
+                            }
+                        })
+                        .catch(err => console.error("Could not geocode fallback ward:", err))
+                }
             }
         }
 
