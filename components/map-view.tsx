@@ -21,6 +21,9 @@ export function MapView() {
     const isCitizen = user?.role === "citizen"
     const sourceData = isCitizen ? wardComplaints : complaints
 
+    console.log("DEBUG MAP_VIEW - User:", user?.name, "Role:", user?.role, "Ward:", user?.ward)
+    console.log("DEBUG MAP_VIEW - sourceData length:", sourceData?.length, "complaints:", complaints?.length, "wardComplaints:", wardComplaints?.length)
+
     // ─── Effect 1: Initialize the map ONCE and never destroy it on re-render ───
     useEffect(() => {
         if (map.current) return  // Prevent double-init
@@ -103,6 +106,10 @@ export function MapView() {
             sourceData.forEach((complaint: Complaint) => {
                 if (!complaint.location?.lat || !complaint.location?.lng) return
 
+                // Skip the missing-coordinate fallback mapped by API to New Delhi
+                // This prevents the map from jumping 400km away to Delhi when a Kanpur citizen loads the page
+                if (complaint.location.lat === 28.6139 && complaint.location.lng === 77.209) return
+
                 hasValidCoords = true
                 const lngLat: [number, number] = [complaint.location.lng, complaint.location.lat]
                 bounds.extend(lngLat)
@@ -172,8 +179,13 @@ export function MapView() {
                         [ne.lng + lngDiff * 0.8, ne.lat + latDiff * 0.8]
                     )
 
-                    map.current.setMaxBounds(elasticBounds)
-                    map.current.setMinZoom(9) // Allow zooming out a bit more
+                    // Defer applying the restrictive bounds to ensure the jump completely resolves first
+                    setTimeout(() => {
+                        if (map.current) {
+                            map.current.setMaxBounds(elasticBounds)
+                            map.current.setMinZoom(9)
+                        }
+                    }, 500)
                 }
             } else if (!hasValidCoords && map.current && user?.ward && !boundsInitializedRef.current) {
                 // FALLBACK: If there are no points, but the user has a ward (pincode), geocode it so the map doesn't show all of India

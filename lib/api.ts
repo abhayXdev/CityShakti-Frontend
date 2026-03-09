@@ -1,8 +1,21 @@
 import { Complaint, ComplaintDetail, ComplaintActivity, ComplaintProgress } from "./data"
 
 // Use local Next.js proxy to avoid CORS issues in dev.
-// In production, set NEXT_PUBLIC_API_URL to the deployed backend URL.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/backend"
+// In production, set NEXT_PUBLIC_API_URL t// Setup URL resolving to handle NEXT_PUBLIC_API_URL from Vercel/Render envs
+const getBaseUrl = () => {
+    // If we have a direct production/deployed API URL
+    let url = process.env.NEXT_PUBLIC_API_URL
+    if (url) {
+        if (!url.endsWith("/api")) {
+            url = url.replace(/\/$/, "") + "/api"
+        }
+        return url
+    }
+
+    // Local dev proxy fallback
+    return process.env.NEXT_PUBLIC_API_BASE_URL || "/api/backend"
+}
+const API_BASE_URL = getBaseUrl()
 
 // Mapping from backend status to frontend status
 function mapStatus(backendStatus: string): Complaint["status"] {
