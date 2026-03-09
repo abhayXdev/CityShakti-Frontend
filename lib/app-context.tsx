@@ -238,7 +238,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     []
   )
   const logout = useCallback(() => {
-    console.trace("DEBUG APP-CONTEXT: LOGOUT CALLED!")
     localStorage.removeItem("token")
     setUser(null)
     setComplaints([])

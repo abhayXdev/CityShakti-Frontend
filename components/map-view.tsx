@@ -100,7 +100,6 @@ export function MapView() {
     useEffect(() => {
         // Effect 2: Update markers and set initial bounds when sourceData or map changes
         const placeMarkers = () => {
-            console.log("DEBUG MAP: placeMarkers called", { mapExists: !!map.current, mapLoaded, sourceDataLen: sourceData?.length })
             if (!map.current || !mapLoaded) return
 
             // Clear old markers
@@ -112,19 +111,16 @@ export function MapView() {
 
             sourceData.forEach((complaint: Complaint) => {
                 if (!complaint.location?.lat || !complaint.location?.lng) {
-                    console.log("DEBUG MAP: Skipping marker due to missing lat/lng", complaint)
                     return
                 }
 
                 // Skip the missing-coordinate fallback mapped by API to New Delhi
                 // This prevents the map from jumping 400km away to Delhi when a Kanpur citizen loads the page
                 if (complaint.location.lat === 28.6139 && complaint.location.lng === 77.209) {
-                    console.log("DEBUG MAP: Skipping marker mapped to New Delhi default", complaint)
                     return
                 }
 
                 hasValidCoords = true
-                console.log("DEBUG MAP: Plotting marker coordinate", complaint.location)
                 const lngLat: [number, number] = [Number(complaint.location.lng), Number(complaint.location.lat)]
                 if (!isNaN(lngLat[0]) && !isNaN(lngLat[1])) {
                     bounds.extend(lngLat)
@@ -170,8 +166,6 @@ export function MapView() {
 
                 markersRef.current.push(marker)
             })
-
-            console.log("DEBUG MAP: finished plotting markers", { hasValidCoords, boundsInitialized: boundsInitializedRef.current, user: user?.role })
 
             // Only attempt bounds logic if we haven't already and the user profile has loaded
             if (!boundsInitializedRef.current && user) {
