@@ -145,6 +145,12 @@
     transition-duration: 200ms;
   }
 
+  /* Fix: Disable CSS transitions inside the map container and custom markers to prevent MapLibre layout breakage */
+  .maplibregl-map *,
+  .marker {
+    transition: none !important;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
