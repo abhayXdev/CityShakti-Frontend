@@ -113,7 +113,7 @@ export function MapView() {
                 const el = document.createElement("div")
                 el.className = "marker"
                 const bgColor = isResolved ? "bg-success" : "bg-destructive"
-                el.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-white shadow-md ${bgColor}"></div>`
+                el.innerHTML = `<div class="w-5 h-5 rounded-full border-[3px] border-white shadow-lg ${bgColor}" style="width: 20px; height: 20px;"></div>`
 
                 const popupContent = `
                     <div class="p-2 min-w-[200px] font-sans text-foreground">
