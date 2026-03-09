@@ -112,9 +112,8 @@ export function MapView() {
                 // Coloured dot marker
                 const el = document.createElement("div")
                 el.className = "marker"
-                // Inline styles prevent Tailwind CSS from purging the marker during production builds
-                const bgColor = isResolved ? "#16a34a" : "#dc2626"
-                el.innerHTML = `<div style="width: 16px; height: 16px; border-radius: 9999px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: ${bgColor};"></div>`
+                const bgColor = isResolved ? "bg-success" : "bg-destructive"
+                el.innerHTML = `<div class="w-4 h-4 rounded-full border-2 border-white shadow-md ${bgColor}"></div>`
 
                 const popupContent = `
                     <div class="p-2 min-w-[200px] font-sans text-foreground">
@@ -161,20 +160,20 @@ export function MapView() {
 
                 // Restriction Logic for Citizens/Officers
                 if (user?.role !== "sudo") {
-                    // Calculate Elastic Bounding Box with 50% padding (extra generous to avoid "stuck" feeling)
+                    // Calculate Elastic Bounding Box with 80% padding (extra generous to avoid "stuck" feeling)
                     const sw = bounds.getSouthWest()
                     const ne = bounds.getNorthEast()
 
-                    const latDiff = Math.abs(ne.lat - sw.lat) || 0.02
-                    const lngDiff = Math.abs(ne.lng - sw.lng) || 0.02
+                    const latDiff = Math.max(Math.abs(ne.lat - sw.lat), 0.05)
+                    const lngDiff = Math.max(Math.abs(ne.lng - sw.lng), 0.05)
 
                     const elasticBounds = new maplibregl.LngLatBounds(
-                        [sw.lng - lngDiff * 0.5, sw.lat - latDiff * 0.5],
-                        [ne.lng + lngDiff * 0.5, ne.lat + latDiff * 0.5]
+                        [sw.lng - lngDiff * 0.8, sw.lat - latDiff * 0.8],
+                        [ne.lng + lngDiff * 0.8, ne.lat + latDiff * 0.8]
                     )
 
                     map.current.setMaxBounds(elasticBounds)
-                    map.current.setMinZoom(8) // Allow zooming out a bit more
+                    map.current.setMinZoom(9) // Allow zooming out a bit more
                 }
             }
         }
