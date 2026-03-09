@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import maplibregl from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
 import { useApp } from "@/lib/app-context"
@@ -13,8 +13,8 @@ const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' v
 export function MapView() {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<maplibregl.Map | null>(null)
+    const [mapLoaded, setMapLoaded] = useState(false)
     const markersRef = useRef<maplibregl.Marker[]>([])
-    const mapLoadedRef = useRef(false)
     const boundsInitializedRef = useRef(false)
 
     const { user, complaints, wardComplaints, setActiveView, setSelectedCommunityComplaintId } = useApp()
@@ -60,16 +60,21 @@ export function MapView() {
             })
 
             map.current.on("load", () => {
-                mapLoadedRef.current = true
-
-                // Ensure resize is processed after map loads inside the container
-                setTimeout(() => {
-                    map.current?.resize()
-                }, 200)
-
-                // Trigger the marker update now that the map is ready
-                map.current?.fire("data-ready")
+                setMapLoaded(true)
             })
+
+            // Workaround for Ola Maps style errors (like missing 3d_model layers) 
+            // that prevent the native 'load' event from ever firing.
+            map.current.on('error', (e) => {
+                console.warn("MapLibre caught an error (often style related):", e)
+                setMapLoaded(true)
+            })
+
+            // Absolute failsafe: if 1.5 seconds pass and no load event fired, force it.
+            // The base tiles are usually visible by this point even if sprites failed.
+            setTimeout(() => {
+                setMapLoaded(true)
+            }, 1500)
         }, 100)
 
         // Ensure map resizes correctly if container dimensions change
@@ -85,7 +90,7 @@ export function MapView() {
         return () => {
             if (resizeObserver) resizeObserver.disconnect()
             clearTimeout(initTimeout)
-            mapLoadedRef.current = false
+            setMapLoaded(false)
             map.current?.remove()
             map.current = null
         }
@@ -95,7 +100,8 @@ export function MapView() {
     useEffect(() => {
         // Effect 2: Update markers and set initial bounds when sourceData or map changes
         const placeMarkers = () => {
-            if (!map.current || !mapLoadedRef.current) return
+            console.log("DEBUG MAP: placeMarkers called", { mapExists: !!map.current, mapLoaded, sourceDataLen: sourceData?.length })
+            if (!map.current || !mapLoaded) return
 
             // Clear old markers
             markersRef.current.forEach(m => m.remove())
@@ -105,15 +111,24 @@ export function MapView() {
             let hasValidCoords = false
 
             sourceData.forEach((complaint: Complaint) => {
-                if (!complaint.location?.lat || !complaint.location?.lng) return
+                if (!complaint.location?.lat || !complaint.location?.lng) {
+                    console.log("DEBUG MAP: Skipping marker due to missing lat/lng", complaint)
+                    return
+                }
 
                 // Skip the missing-coordinate fallback mapped by API to New Delhi
                 // This prevents the map from jumping 400km away to Delhi when a Kanpur citizen loads the page
-                if (complaint.location.lat === 28.6139 && complaint.location.lng === 77.209) return
+                if (complaint.location.lat === 28.6139 && complaint.location.lng === 77.209) {
+                    console.log("DEBUG MAP: Skipping marker mapped to New Delhi default", complaint)
+                    return
+                }
 
                 hasValidCoords = true
-                const lngLat: [number, number] = [complaint.location.lng, complaint.location.lat]
-                bounds.extend(lngLat)
+                console.log("DEBUG MAP: Plotting marker coordinate", complaint.location)
+                const lngLat: [number, number] = [Number(complaint.location.lng), Number(complaint.location.lat)]
+                if (!isNaN(lngLat[0]) && !isNaN(lngLat[1])) {
+                    bounds.extend(lngLat)
+                }
 
                 const isResolved = complaint.status === "resolved" || complaint.status === "closed"
 
@@ -156,14 +171,19 @@ export function MapView() {
                 markersRef.current.push(marker)
             })
 
+            console.log("DEBUG MAP: finished plotting markers", { hasValidCoords, boundsInitialized: boundsInitializedRef.current, user: user?.role })
+
             // Only attempt bounds logic if we haven't already and the user profile has loaded
             if (!boundsInitializedRef.current && user) {
                 if (hasValidCoords && map.current) {
                     boundsInitializedRef.current = true
-                    map.current.setMaxBounds(null)
-
-                    // Fit to initial data instantly (no animation) to avoid bounds constraint conflicts crashing the camera
-                    map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
+                    try {
+                        map.current.setMaxBounds(null)
+                        // Fit to initial data instantly (no animation) to avoid bounds constraint conflicts crashing the camera
+                        map.current.fitBounds(bounds, { padding: 50, maxZoom: 16, animate: false })
+                    } catch (err) {
+                        console.error("MapLibre fitBounds failed:", err)
+                    }
 
                     // Restriction Logic for Citizens/Officers
                     if (user.role !== "sudo") {
@@ -179,15 +199,14 @@ export function MapView() {
                         )
                         setTimeout(() => {
                             if (map.current) {
-                                map.current.setMaxBounds(elasticBounds)
-                                map.current.setMinZoom(9)
+                                try { map.current.setMaxBounds(elasticBounds); map.current.setMinZoom(9) } catch (e) { }
                             }
                         }, 500)
                     }
                 } else if (!hasValidCoords && map.current && user.ward) {
                     // FALLBACK: User has a ward but no valid points. Geocode ward instead.
                     boundsInitializedRef.current = true
-                    map.current.setMaxBounds(null)
+                    try { map.current.setMaxBounds(null) } catch (e) { }
 
                     const olaApiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
                     fetch(`https://api.olamaps.io/places/v1/geocode?address=${user.ward}&api_key=${olaApiKey}`)
@@ -204,8 +223,7 @@ export function MapView() {
                                     )
                                     setTimeout(() => {
                                         if (map.current) {
-                                            map.current.setMaxBounds(elasticBounds)
-                                            map.current.setMinZoom(10)
+                                            try { map.current.setMaxBounds(elasticBounds); map.current.setMinZoom(10) } catch (e) { }
                                         }
                                     }, 500)
                                 }
@@ -228,23 +246,20 @@ export function MapView() {
             }
         }
         mapContainer.current?.removeEventListener("click", handleClick)
-        mapContainer.current?.addEventListener("click", handleClick)
-
-        // If map is already loaded, place markers immediately;
-        // otherwise wait for the "data-ready" event fired by the load handler
-        if (mapLoadedRef.current) {
+        mapContainer.current?.addEventListener("click", handleClick)        // If map is already loaded and we have data, place markers immediately
+        if (mapLoaded) {
             placeMarkers()
-        } else {
-            // Unbind previous listener if any to avoid stacking
-            map.current?.off("data-ready", placeMarkers)
-            map.current?.once("data-ready", placeMarkers)
         }
 
+        const currentMap = map.current
         return () => {
-            mapContainer.current?.removeEventListener("click", handleClick)
-            map.current?.off("data-ready", placeMarkers)
+            markersRef.current.forEach(m => m.remove())
+            markersRef.current = []
+            if (mapContainer.current) {
+                mapContainer.current.removeEventListener("click", handleClick)
+            }
         }
-    }, [sourceData, user?.role, isCitizen, setActiveView, setSelectedCommunityComplaintId])
+    }, [sourceData, user?.role, isCitizen, setActiveView, setSelectedCommunityComplaintId, mapLoaded, user])
 
     return (
         <div className="flex flex-col gap-6 h-full pb-10">
