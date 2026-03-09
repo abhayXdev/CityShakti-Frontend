@@ -58,10 +58,10 @@ export function MapView() {
 
             map.current.on("load", () => {
                 mapLoadedRef.current = true
-                
+
                 // Ensure resize is processed after map loads inside the container
                 setTimeout(() => {
-                   map.current?.resize()
+                    map.current?.resize()
                 }, 200)
 
                 // Trigger the marker update now that the map is ready
@@ -139,6 +139,13 @@ export function MapView() {
                     .setPopup(new maplibregl.Popup({ offset: 15, closeButton: false }).setHTML(popupContent))
                     .addTo(map.current!)
 
+                // Fix: Add click listener to the marker element to toggle the popup
+                el.style.cursor = "pointer"
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation() // Prevent event from bubbling to map
+                    marker.togglePopup()
+                })
+
                 markersRef.current.push(marker)
             })
 
@@ -157,10 +164,10 @@ export function MapView() {
                     // Calculate Elastic Bounding Box with 50% padding (extra generous to avoid "stuck" feeling)
                     const sw = bounds.getSouthWest()
                     const ne = bounds.getNorthEast()
-                    
+
                     const latDiff = Math.abs(ne.lat - sw.lat) || 0.02
                     const lngDiff = Math.abs(ne.lng - sw.lng) || 0.02
-                    
+
                     const elasticBounds = new maplibregl.LngLatBounds(
                         [sw.lng - lngDiff * 0.5, sw.lat - latDiff * 0.5],
                         [ne.lng + lngDiff * 0.5, ne.lat + latDiff * 0.5]
