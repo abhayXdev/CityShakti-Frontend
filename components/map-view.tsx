@@ -175,6 +175,30 @@ export function MapView() {
                     map.current.setMaxBounds(elasticBounds)
                     map.current.setMinZoom(9) // Allow zooming out a bit more
                 }
+            } else if (!hasValidCoords && map.current && user?.ward && !boundsInitializedRef.current) {
+                // FALLBACK: If there are no points, but the user has a ward (pincode), geocode it so the map doesn't show all of India
+                boundsInitializedRef.current = true
+                map.current.setMaxBounds(null)
+
+                const olaApiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
+                fetch(`https://api.olamaps.io/places/v1/geocode?address=${user.ward}&api_key=${olaApiKey}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.geocodingResults && data.geocodingResults.length > 0) {
+                            const location = data.geocodingResults[0].geometry.location
+                            map.current?.flyTo({ center: [location.lng, location.lat], zoom: 12, essential: true })
+
+                            if (user.role !== "sudo") {
+                                const elasticBounds = new maplibregl.LngLatBounds(
+                                    [location.lng - 0.1, location.lat - 0.1],
+                                    [location.lng + 0.1, location.lat + 0.1]
+                                )
+                                map.current?.setMaxBounds(elasticBounds)
+                                map.current?.setMinZoom(10)
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Could not geocode fallback ward:", err))
             }
         }
 
