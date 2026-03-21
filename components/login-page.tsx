@@ -57,19 +57,19 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
       {/* Animated background - Indian Flag Colors */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/15 blur-[120px] will-change-transform"
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/10 blur-[100px]"
         />
         <motion.div
-          animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/15 blur-[120px] will-change-transform"
+          animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/10 blur-[100px]"
         />
         <motion.div
-          animate={{ x: [0, 20, 0], y: [0, -20, 0] }}
+          animate={{ scale: [1, 1.5, 1] }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/4 h-[40vh] w-[40vh] rounded-full bg-[#000080]/10 blur-[100px] will-change-transform"
+          className="absolute top-1/4 left-1/4 h-[40vh] w-[40vh] rounded-full bg-[#000080]/5 blur-[80px]"
         />
       </div>
 
@@ -129,7 +129,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                 onClick={() => { setRole("citizen"); setError("") }}
                 className={cn(
                   "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                  role === "citizen" ? "text-stone-900" : "text-stone-600 hover:text-stone-900"
+                  role === "citizen" ? "text-white" : "text-stone-500 hover:text-stone-900"
                 )}
               >
                 <User className="h-4 w-4" />
@@ -140,7 +140,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                 onClick={() => { setRole("officer"); setError("") }}
                 className={cn(
                   "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                  role === "officer" ? "text-white" : "text-stone-600 hover:text-stone-900"
+                  role === "officer" ? "text-white" : "text-stone-500 hover:text-stone-900"
                 )}
               >
                 <Building2 className="h-4 w-4" />
@@ -151,7 +151,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
                 onClick={() => { setRole("sudo"); setError("") }}
                 className={cn(
                   "relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-                  role === "sudo" ? "text-white" : "text-stone-600 hover:text-stone-900"
+                  role === "sudo" ? "text-white" : "text-stone-500 hover:text-stone-900"
                 )}
               >
                 <Shield className="h-4 w-4" />
@@ -232,10 +232,10 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               <Button
                 type="submit"
                 className={cn(
-                  "h-12 w-full gap-2 text-base font-black shadow-lg transition-all active:scale-[0.98] rounded-xl",
-                  role === "citizen" ? "bg-[#FF9933] hover:bg-[#FF9933]/90 shadow-[#FF9933]/20 text-stone-900" :
-                    role === "officer" ? "bg-[#138808] hover:bg-[#138808]/90 shadow-[#138808]/20 text-white" :
-                      "bg-[#2B6CEE] hover:bg-[#2B6CEE]/90 shadow-[#2B6CEE]/20 text-white"
+                  "h-12 w-full gap-2 text-base font-black shadow-lg transition-all active:scale-[0.98] rounded-xl text-white",
+                  role === "citizen" ? "bg-[#FF9933] hover:bg-[#FF9933]/90 shadow-[#FF9933]/20" :
+                    role === "officer" ? "bg-[#138808] hover:bg-[#138808]/90 shadow-[#138808]/20" :
+                      "bg-[#2B6CEE] hover:bg-[#2B6CEE]/90 shadow-[#2B6CEE]/20"
                 )}
                 disabled={isLoading}
               >
@@ -383,7 +383,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs text-stone-500 font-medium">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           Secured by National Informatics Centre (NIC)
         </p>
       </div>

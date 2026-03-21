@@ -173,14 +173,14 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 {/* Animated background - Indian Flag Colors */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <motion.div
-                        animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/15 blur-[120px] will-change-transform"
+                        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/10 blur-[100px]"
                     />
                     <motion.div
-                        animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
-                        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/15 blur-[120px] will-change-transform"
+                        animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+                        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                        className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/10 blur-[100px]"
                     />
                 </div>
 
@@ -330,7 +330,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                         onClick={() => setRole(r)}
                         className={cn(
                             "relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all",
-                            role === r ? (r === "citizen" ? "text-stone-900" : "text-white") : "text-stone-600 hover:text-stone-900"
+                            role === r ? "text-white" : "text-stone-500 hover:text-stone-900"
                         )}
                     >
                         {r === "citizen" ? <User className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
@@ -507,7 +507,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 onClick={handleSendOtp}
                 disabled={isLoading}
                 variant={role === "citizen" ? "gradient" : "gradient-success"}
-                className={cn("w-full rounded-xl h-12 text-base font-bold mt-2 shadow-lg", role === "citizen" ? "text-stone-900" : "text-white")}
+                className="w-full rounded-xl h-12 text-base font-bold mt-2 shadow-lg"
             >
                 {isLoading
                     ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />Sending OTP…</>
@@ -523,19 +523,19 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             {/* Animated background - Indian Flag Colors */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/15 blur-[120px] will-change-transform"
+                    animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -top-1/4 -left-1/4 h-[80vh] w-[80vh] rounded-full bg-[#FF9933]/10 blur-[100px]"
                 />
                 <motion.div
-                    animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
-                    transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/15 blur-[120px] will-change-transform"
+                    animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                    className="absolute -right-1/4 -bottom-1/4 h-[80vh] w-[80vh] rounded-full bg-[#138808]/10 blur-[100px]"
                 />
                 <motion.div
-                    animate={{ x: [0, 20, 0], y: [0, -20, 0] }}
+                    animate={{ scale: [1, 1.5, 1] }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/4 left-1/4 h-[40vh] w-[40vh] rounded-full bg-[#000080]/10 blur-[100px] will-change-transform"
+                    className="absolute top-1/4 left-1/4 h-[40vh] w-[40vh] rounded-full bg-[#000080]/5 blur-[80px]"
                 />
             </div>
 
@@ -594,7 +594,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     </div>
                 </motion.div>
 
-                <p className="mt-8 text-center text-xs font-semibold text-stone-500 tracking-wider">
+                <p className="mt-8 text-center text-xs font-semibold text-stone-400 tracking-wider">
                     SECURED BY NATIONAL INFORMATICS CENTRE (NIC)
                 </p>
             </div>
