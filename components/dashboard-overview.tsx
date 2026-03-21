@@ -444,7 +444,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                 >
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="lg" className="h-16 px-10 text-base font-black shadow-2xl bg-[#FF9933] hover:bg-[#FF9933]/90 text-white rounded-2xl shadow-[#FF9933]/30 active:scale-95 transition-all group overflow-hidden relative">
+                      <Button size="lg" className="h-16 px-10 text-base font-black shadow-2xl bg-[#FF9933] hover:bg-[#FF9933]/90 text-stone-900 rounded-2xl shadow-[#FF9933]/30 active:scale-95 transition-all group overflow-hidden relative">
                         <span className="relative z-10 flex items-center gap-3">
                           <Plus className="h-6 w-6 stroke-[3px]" />
                           REPORT NEW ISSUE
@@ -558,7 +558,7 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                           <DialogFooter className="pt-4 border-t mt-4">
                             <Button
                               type="submit"
-                              className="w-full h-12 text-base font-black bg-[#FF9933] hover:bg-[#FF9933]/90 text-white rounded-xl shadow-lg shadow-[#FF9933]/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                              className="w-full h-12 text-base font-black bg-[#FF9933] hover:bg-[#FF9933]/90 text-stone-900 rounded-xl shadow-lg shadow-[#FF9933]/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                               disabled={isSubmitting || !formData.latitude}
                             >
                               {isSubmitting ? (

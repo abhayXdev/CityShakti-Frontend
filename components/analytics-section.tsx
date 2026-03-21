@@ -128,8 +128,8 @@ export function AnalyticsSection() {
             className={cn(
               "h-9 px-6 text-xs font-black uppercase tracking-widest transition-all duration-500 rounded-xl",
               filter === "6"
-                ? "bg-[#FF9933] text-white shadow-lg shadow-orange-500/30 hover:bg-[#FF9933]/90 active:scale-95"
-                : "hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-500"
+                ? "bg-[#FF9933] text-stone-900 shadow-lg shadow-orange-500/30 hover:bg-[#FF9933]/90 active:scale-95"
+                : "hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-400"
             )}
           >
             6 Months
@@ -141,8 +141,8 @@ export function AnalyticsSection() {
             className={cn(
               "h-9 px-6 text-xs font-black uppercase tracking-widest transition-all duration-500 rounded-xl",
               filter === "12"
-                ? "bg-[#FF9933] text-white shadow-lg shadow-orange-500/30 hover:bg-[#FF9933]/90 active:scale-95"
-                : "hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-500"
+                ? "bg-[#FF9933] text-stone-900 shadow-lg shadow-orange-500/30 hover:bg-[#FF9933]/90 active:scale-95"
+                : "hover:bg-stone-200 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-400"
             )}
           >
             12 Months
