@@ -44,6 +44,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { MicButton } from "@/components/mic-button"
 import {
   Select,
   SelectContent,
@@ -514,7 +515,18 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
                             </div>
                           </div>
                           <div className="grid gap-2">
-                            <Label htmlFor="description">Detailed Description</Label>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="description">Detailed Description</Label>
+                              <MicButton
+                                userToken={user?.token}
+                                onTranscriptionComplete={(text) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    description: prev.description ? `${prev.description} ${text}` : text
+                                  }))
+                                }}
+                              />
+                            </div>
                             <Textarea
                               id="description"
                               placeholder="Provide specific details, landmarks, and context to assist field officers..."
