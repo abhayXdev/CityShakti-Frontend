@@ -51,12 +51,21 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | null>(null)
 
+/**
+ * Custom React Hook to consume the global App Context.
+ * Must be used within an `<AppProvider>`.
+ */
 export function useApp() {
   const ctx = useContext(AppContext)
   if (!ctx) throw new Error("useApp must be used within AppProvider")
   return ctx
 }
 
+/**
+ * Global State Provider:
+ * Manages Auth User tokens, Complaint arrays, WebSocket/interval polling, and UI Notifications.
+ * Exposes core functions like `login`, `logout`, and `createComplaint` to all child components.
+ */
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser>(null)
   const [complaints, setComplaints] = useState<Complaint[]>([])

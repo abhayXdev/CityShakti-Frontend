@@ -12,10 +12,18 @@ import { forgotPasswordApi, resetPasswordApi } from "@/lib/api"
 
 const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
+/**
+ * Props for the LoginPage component.
+ */
 interface LoginPageProps {
   onSwitchToRegister?: () => void
 }
 
+/**
+ * LoginPage Component: Handles user authentication including Role selection (Citizen/Officer/Sudo),
+ * Username/Password login, and a multi-step Forgot Password flow (Email -> OTP -> New Password).
+ * @param {LoginPageProps} props - The properties for the component.
+ */
 export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   const { login } = useApp()
   const [role, setRole] = useState<"citizen" | "officer" | "sudo">("citizen")
@@ -36,14 +44,20 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
   const [fpCountdown, setFpCountdown] = useState(0)
   const fpOtpRefs = useRef<Array<HTMLInputElement | null>>([])
 
+  /**
+   * Handles the login form submission.
+   * Simulates a brief network delay before authenticating via the global context.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
+    // Simulate network latency for a smoother visual transition
     await new Promise((r) => setTimeout(r, 800))
 
     try {
+      // Attempt to authenticate with the provided credentials
       await login(role, username, password)
     } catch (err: any) {
       setError(err?.message || "Invalid credentials. Please try again.")

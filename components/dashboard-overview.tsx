@@ -94,6 +94,12 @@ const statusColors = {
   closed: "bg-[#138808]/20 text-[#138808] font-semibold border-[#138808]/30",
 }
 
+/**
+ * DashboardOverview Component: The central command center for all users.
+ * Displays statistics, complaint lists, and interactive charts based on the user's role.
+ * Allows Citizens to report issues and Officers to manage resolutions.
+ * @param {boolean} isTrackingOnly - If true, hides actionable reporting UI for view-only modes.
+ */
 export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?: boolean }) {
   const { user, complaints, wardComplaints, outOfBoundComplaints, createComplaint, updateComplaintStatus, closeComplaint, reEscalateComplaint, addProgressUpdate, upvoteComplaint, upvotedIds, dashboardStats } = useApp()
 
@@ -181,6 +187,9 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
     }
   }
 
+  /**
+   * Processes new complaint submissions including Image Uploads via ImgBB and duplicate detection.
+   */
   const handleSubmitComplaint = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -321,6 +330,10 @@ export function DashboardOverview({ isTrackingOnly = false }: { isTrackingOnly?:
     .slice(0, 15)
 
   // Generate trend line data by grouping citizen complaints by day
+  /**
+   * Generates a 14-day rolling window of complaint frequency and resolution velocity
+   * to power the Recharts Area charts on the dashboard.
+   */
   const getDailyChartData = () => {
     const data: Record<string, { date: string, complaints: number, resolved: number }> = {}
     const today = new Date()

@@ -16,10 +16,14 @@ import { fetchPincodeInfo, formatPincodeArea, type PincodeInfo, type PincodeStat
 
 const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
+/**
+ * Props for the RegisterPage component.
+ */
 interface RegisterPageProps {
     onBackToLogin: () => void
 }
 
+// List of governmental departments available for Officer registration
 const DEPARTMENTS = [
     "Public Works Department",
     "Water Supply & Sanitation",
@@ -32,6 +36,11 @@ const DEPARTMENTS = [
     "General Administration",
 ]
 
+/**
+ * RegisterPage Component: Manages new user onboarding for both Citizens and Officers.
+ * Features strict PIN code validation, department assignments, and email OTP verification.
+ * @param {RegisterPageProps} props - Component properties.
+ */
 export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     // ── FORM STATE ─────────────────────────────────────────────────
     const [role, setRole] = useState<"citizen" | "officer">("citizen")
@@ -56,6 +65,10 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     const otpRefs = useRef<Array<HTMLInputElement | null>>([])
 
     // ── PIN CODE AUTO-LOOKUP ───────────────────────────────────────
+    /**
+     * Watches the `pincode` state and automatically fetches geographical info
+     * when a valid 6-digit Indian PIN code is entered.
+     */
     useEffect(() => {
         if (pincode.length !== 6) {
             setPincodeInfo(null)
@@ -76,6 +89,9 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }, [otpCountdown])
 
     // ── STEP 1: SEND OTP ──────────────────────────────────────────
+    /**
+     * Validates all form fields before requesting the backend to dispatch an OTP via email.
+     */
     const handleSendOtp = async () => {
         setError("")
         if (!fullName.trim()) return setError("Please enter your full name.")
@@ -123,6 +139,10 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }
 
     // ── STEP 2: VERIFY OTP + REGISTER ─────────────────────────────
+    /**
+     * Validates the 6-digit OTP against the backend and finalize user creation.
+     * Displays a success screen upon completion.
+     */
     const handleVerifyAndRegister = async () => {
         setError("")
         const code = otp.join("")

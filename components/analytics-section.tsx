@@ -48,11 +48,18 @@ const donutChartConfig = {
 
 const RANGOLI_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff9933' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
+/**
+ * AnalyticsSection Component: Renders comprehensive City Insights via Recharts.
+ * Visualizes dynamic metrics including department performance, complaint statuses, and monthly trends.
+ */
 export function AnalyticsSection() {
   const [filter, setFilter] = useState<"6" | "12">("12")
   const { complaints, isRestoring } = useApp()
 
   // Compute monthly trend from real complaints
+  /**
+   * Memoized computation of historical monthly data (up to 12 months back) based on all active complaints.
+   */
   const monthlyData = useMemo(() => {
     const months: { month: string; complaints: number; resolved: number }[] = []
     for (let i = 11; i >= 0; i--) {
@@ -77,6 +84,9 @@ export function AnalyticsSection() {
   const filteredMonthly = filter === "6" ? monthlyData.slice(6) : monthlyData
 
   // Compute department data from real complaints
+  /**
+   * Memoized aggregation calculating the total number of complaints assigned to each department.
+   */
   const departmentData = useMemo(() => {
     const deptMap: Record<string, number> = {}
     for (const c of complaints) {

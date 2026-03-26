@@ -1,4 +1,8 @@
-// Smart Civic Monitoring System - Dummy Data Layer
+/**
+ * Global Frontend Type Definitions.
+ * Contains TypeScript interfaces reflecting the backend data shape.
+ */
+// Smart Civic Monitoring System - Data Layer
 
 export type Complaint = {
   id: string

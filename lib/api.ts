@@ -1,7 +1,12 @@
 import { Complaint, ComplaintDetail, ComplaintActivity, ComplaintProgress } from "./data"
 
-// Use local Next.js proxy to avoid CORS issues in dev.
-// In production, set NEXT_PUBLIC_API_URL t// Setup URL resolving to handle NEXT_PUBLIC_API_URL from Vercel/Render envs
+/**
+ * Core API Service Bridge:
+ * Responsible for all HTTP communications between the Next.js Frontend and the FastAPI Backend.
+ * Handles token attachment, error interception, and data transformation (Backend Structs -> Frontend Structs).
+ */
+
+// Format the base API url dynamically based on the environment (local/Vercel/Render)
 const getBaseUrl = () => {
     // If we have a direct production/deployed API URL
     let url = process.env.NEXT_PUBLIC_API_URL
