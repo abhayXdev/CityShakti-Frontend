@@ -57,10 +57,13 @@ export function MicButton({ onTranscriptionComplete, userToken }: MicButtonProps
             const formData = new FormData()
             formData.append("file", audioBlob, "recording.webm")
 
-            // Uses the same API base point as the rest of the application
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+            // Ensure baseUrl ends with /api just like the rest of the application
+            let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+            if (!baseUrl.endsWith("/api")) {
+                baseUrl = baseUrl.replace(/\/$/, "") + "/api"
+            }
 
-            const response = await fetch(`${apiUrl}/api/complaints/transcribe`, {
+            const response = await fetch(`${baseUrl}/complaints/transcribe`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${userToken}`,
@@ -69,16 +72,17 @@ export function MicButton({ onTranscriptionComplete, userToken }: MicButtonProps
             })
 
             if (!response.ok) {
-                throw new Error("Failed to transcribe")
+                const errObj = await response.json().catch(() => ({}))
+                throw new Error(errObj.detail || "Failed to transcribe")
             }
 
             const data = await response.json()
             if (data.text) {
                 onTranscriptionComplete(data.text)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Transcription error:", error)
-            alert("Failed to transcribe audio. Please try again.")
+            alert(`Error: ${error.message || "Failed to transcribe audio. Please try again."}`)
         } finally {
             setIsProcessing(false)
         }
