@@ -20,31 +20,63 @@ export async function fetchPincodeInfo(pincode: string): Promise<PincodeInfo | n
     if (!/^\d{6}$/.test(pincode)) return null
 
     try {
-        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`)
-        if (!res.ok) return null
-
-        const data = await res.json()
-
-        if (
-            !Array.isArray(data) ||
-            data.length === 0 ||
-            data[0].Status !== "Success" ||
-            !data[0].PostOffice ||
-            data[0].PostOffice.length === 0
-        ) {
-            return null
+        // First try Zippopotam (Free, Reliable SSL)
+        const res = await fetch(`https://api.zippopotam.us/in/${pincode}`)
+        if (res.ok) {
+            const data = await res.json()
+            if (data && data.places && data.places.length > 0) {
+                const place = data.places[0]
+                return {
+                    postOffice: place["place name"],
+                    district: place["state"], // Zippopotam usually provides state for district
+                    state: place["state"],
+                    pincode,
+                }
+            }
         }
-
-        const po = data[0].PostOffice[0]
-        return {
-            postOffice: po.Name,
-            district: po.District,
-            state: po.State,
-            pincode,
-        }
-    } catch {
-        return null
+    } catch (error) {
+        console.error("Zippopotam API error:", error)
     }
+
+    try {
+        // Fallback to Ola Maps API if available
+        const apiKey = process.env.NEXT_PUBLIC_OLA_MAPS_API_KEY
+        if (apiKey) {
+            const res = await fetch(`https://api.olamaps.io/places/v1/geocode?address=${pincode}&api_key=${apiKey}`)
+            if (res.ok) {
+                const data = await res.json()
+                const results = data?.geocodingResults || []
+                if (results.length > 0) {
+                     const result = results[0]
+                     let district = ""
+                     let state = ""
+                     let postOffice = result.name || "Area"
+                     
+                     for (const c of result.address_components || []) {
+                         if (c.types.includes("district") || c.types.includes("administrative_area_level_3")) {
+                             district = c.short_name
+                         }
+                         if (c.types.includes("state") || c.types.includes("administrative_area_level_1")) {
+                             state = c.short_name
+                         }
+                         if (c.types.includes("sublocality") || c.types.includes("locality")) {
+                             postOffice = c.short_name
+                         }
+                     }
+                     return {
+                         postOffice,
+                         district: district || state || "Unknown",
+                         state: state || "Unknown",
+                         pincode
+                     }
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Ola Maps Geocode API error:", error)
+    }
+
+    return null
 }
 
 /**
